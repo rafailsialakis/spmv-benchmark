@@ -11,19 +11,16 @@ int main(int argc, char* argv[]) {
 
     char* result = reconstruct_path(argv[1]);
     FILE* mtx = open_file(result);
-    free(result);
 
-    struct MtxType mtx_type = {0};
-    struct COOMatrix coo_mtx = {0};
+    struct MtxType mtx_type;
+    struct COOMatrix coo_mtx;
 
     parse_header(&mtx_type, mtx);
     parse_metadata(&mtx_type, &coo_mtx, mtx);
     parse_coo(&coo_mtx, mtx);
 
     fclose(mtx);
-    free(coo_mtx.row_idx);
-    free(coo_mtx.col_idx);
-    free(coo_mtx.values);
+    coo_free(&coo_mtx);
 
     return EXIT_SUCCESS;
 }
@@ -73,11 +70,13 @@ FILE* open_file(char* filename){
         printf("Error: Failed to open file %s: No such file or directory\n",filename);
         exit(EXIT_FAILURE);
     }
+    free(filename);
     return f;
 }
 
 char* reconstruct_path(char* filename){
     char* path = "../matrices/";
+    // Memory allocation for result (+1 for \0);
     char* result = (char*) malloc(strlen(filename) + strlen(path) + 1);
     strcpy(result, path);
     strcat(result, filename);
