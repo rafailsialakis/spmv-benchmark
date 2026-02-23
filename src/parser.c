@@ -46,19 +46,19 @@ void parse_metadata(struct MtxType* mtx_type, struct COOMatrix* coo_mtx, FILE* f
 }
 
 void parse_coo(struct COOMatrix* coo_mtx, FILE* file) {
-    coo_mtx->row_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
-    coo_mtx->col_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
+    coo_mtx->row_idx = malloc(sizeof(long)    * coo_mtx->metadata.nnz);
+    coo_mtx->col_idx = malloc(sizeof(long)    * coo_mtx->metadata.nnz);
     coo_mtx->values  = malloc(sizeof(double) * coo_mtx->metadata.nnz);
 
     char line[256];
     for (int i = 0; i < coo_mtx->metadata.nnz; i++) {
         fgets(line, sizeof(line), file);
-        sscanf(line, "%d %d %lf", &coo_mtx->row_idx[i],
+        sscanf(line, "%ld %ld %lf", &coo_mtx->row_idx[i],
                                    &coo_mtx->col_idx[i],
                                    &coo_mtx->values[i]);
         coo_mtx->row_idx[i]--;
         coo_mtx->col_idx[i]--;
-        printf("%d %d %e\n", coo_mtx->row_idx[i],
+        printf("%ld %ld %e\n", coo_mtx->row_idx[i],
                                    coo_mtx->col_idx[i],
                                    coo_mtx->values[i]);
     }
