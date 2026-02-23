@@ -3,26 +3,19 @@
 #include <string.h>
 #include "../include/parser.h"
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        printf("Error: Invalid number of arguments.\nUsage: %s <file.mtx>\n", argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    char* result = reconstruct_path(argv[1]);
+struct COOMatrix* coo_parser(char* filename) {
+    char* result = reconstruct_path(filename);
     FILE* mtx = open_file(result);
 
     struct MtxType mtx_type;
-    struct COOMatrix coo_mtx;
+    struct COOMatrix* coo_mtx = malloc(sizeof(struct COOMatrix));
 
     parse_header(&mtx_type, mtx);
-    parse_metadata(&mtx_type, &coo_mtx, mtx);
-    parse_coo(&coo_mtx, mtx);
+    parse_metadata(&mtx_type, coo_mtx, mtx);
+    parse_coo(coo_mtx, mtx);
 
     fclose(mtx);
-    coo_free(&coo_mtx);
-
-    return EXIT_SUCCESS;
+    return coo_mtx;
 }
 
 void parse_header(struct MtxType* mtx_type, FILE* file){
@@ -58,9 +51,9 @@ void parse_coo(struct COOMatrix* coo_mtx, FILE* file) {
                                    &coo_mtx->values[i]);
         coo_mtx->row_idx[i]--;
         coo_mtx->col_idx[i]--;
-        printf("%ld %ld %e\n", coo_mtx->row_idx[i],
-                                   coo_mtx->col_idx[i],
-                                   coo_mtx->values[i]);
+        //printf("%ld %ld %e\n", coo_mtx->row_idx[i],
+        //                           coo_mtx->col_idx[i],
+        //                           coo_mtx->values[i]);
     }
 }
 
@@ -75,7 +68,7 @@ FILE* open_file(char* filename){
 }
 
 char* reconstruct_path(char* filename){
-    char* path = "../matrices/";
+    char* path = "matrices/";
     // Memory allocation for result (+1 for \0);
     char* result = (char*) malloc(strlen(filename) + strlen(path) + 1);
     strcpy(result, path);
