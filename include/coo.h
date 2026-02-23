@@ -5,14 +5,14 @@
 * Represents the metadata information of a SuiteSparse .mtx file.
 *
 * Fields:
-*     rows (int): The number of rows the matrix has.
-*     cols (int): The number of columns the matrix has.
-*     nnz (int): The number of non-zero elements.
+*     rows (long): The number of rows the matrix has.
+*     cols (long): The number of columns the matrix has.
+*     nnz (long): The number of non-zero elements.
 */
 struct Metadata {
-    int    rows;
-    int    cols;
-    int    nnz;
+    long    rows;
+    long    cols;
+    long    nnz;
 };
 
 /*
@@ -20,14 +20,14 @@ struct Metadata {
  *
  * Fields:
  *     metadata (struct Metadata): Struct that contains information about the number of rows, cols and nnz.
- *     row_idx (int*):
- *     col_idx (int*):
+ *     row_idx (long*):
+ *     col_idx (long*):
  *     values (double*):
  */
 struct COOMatrix {
     struct Metadata metadata;
-    int    *row_idx;
-    int    *col_idx;
+    long    *row_idx;
+    long    *col_idx;
     double *values;
 };
 
