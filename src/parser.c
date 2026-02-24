@@ -7,14 +7,16 @@ struct COOMatrix* coo_parser(char* filename) {
     char* result = reconstruct_path(filename);
     FILE* mtx = open_file(result);
 
-    struct MtxType mtx_type;
+    struct MtxType* mtx_type = malloc(sizeof(struct MtxType));
     struct COOMatrix* coo_mtx = malloc(sizeof(struct COOMatrix));
 
-    parse_header(&mtx_type, mtx);
-    parse_metadata(&mtx_type, coo_mtx, mtx);
+    parse_header(mtx_type, mtx);
+    parse_metadata(mtx_type, coo_mtx, mtx);
+    print_matrix_info(mtx_type, coo_mtx);
     parse_coo(coo_mtx, mtx);
 
     fclose(mtx);
+    free(mtx_type);
     return coo_mtx;
 }
 
@@ -29,31 +31,40 @@ void parse_metadata(struct MtxType* mtx_type, struct COOMatrix* coo_mtx, FILE* f
     while (fgets(line, sizeof(line), file) != NULL) {
         // Skip comment lines except the line that saves the name.
         if (line[0] == '%'){
-            sscanf(line, "%% name: %255s", mtx_type->name);            
+            sscanf(line, "%% name: %255s", mtx_type->name); 
             continue;
         }
         // Parse metadata line.
-        sscanf(line, "%ld %ld %ld", &coo_mtx->metadata.rows, &coo_mtx->metadata.cols, &coo_mtx->metadata.nnz);
+        sscanf(line, "%d %d %d", &coo_mtx->metadata.rows, &coo_mtx->metadata.cols, &coo_mtx->metadata.nnz);
         break;
     }
 }
 
+void print_matrix_info(struct MtxType* mtx_type, struct COOMatrix* coo_mtx) {
+    printf("Matrix: %s\n",   mtx_type->name);
+    printf("Format: %s\n",   mtx_type->format);
+    printf("Field:  %s\n",   mtx_type->field);
+    printf("Symmetry: %s\n", mtx_type->symmetry);
+    printf("Rows: %ld, Cols: %ld, NNZ: %ld\n",
+           coo_mtx->metadata.rows,
+           coo_mtx->metadata.cols,
+           coo_mtx->metadata.nnz);
+}
+
 void parse_coo(struct COOMatrix* coo_mtx, FILE* file) {
-    coo_mtx->row_idx = malloc(sizeof(long)    * coo_mtx->metadata.nnz);
-    coo_mtx->col_idx = malloc(sizeof(long)    * coo_mtx->metadata.nnz);
+    coo_mtx->row_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
+    coo_mtx->col_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
     coo_mtx->values  = malloc(sizeof(double) * coo_mtx->metadata.nnz);
 
     char line[256];
     for (int i = 0; i < coo_mtx->metadata.nnz; i++) {
         fgets(line, sizeof(line), file);
-        sscanf(line, "%ld %ld %lf", &coo_mtx->row_idx[i],
+        sscanf(line, "%d %d %lf", &coo_mtx->row_idx[i],
                                    &coo_mtx->col_idx[i],
                                    &coo_mtx->values[i]);
+        // Transform into 0-based indexing.
         coo_mtx->row_idx[i]--;
         coo_mtx->col_idx[i]--;
-        //printf("%ld %ld %e\n", coo_mtx->row_idx[i],
-        //                           coo_mtx->col_idx[i],
-        //                           coo_mtx->values[i]);
     }
 }
 

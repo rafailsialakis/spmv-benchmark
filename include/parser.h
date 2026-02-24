@@ -37,6 +37,9 @@ struct MtxType{
 * 
 * Args:
 *      filename (char*): A pointer to a String that represents the filename.
+*
+* Returns:
+*      coo_mtx (struct COOMatrix*): A pointer to a COOMatrix struct that has been created based on the *.mtx file.
 */
 struct COOMatrix* coo_parser(char* filename);
 
@@ -71,6 +74,14 @@ void parse_metadata(struct MtxType* mtx_type, struct COOMatrix* coo_mtx, FILE* f
 *     - The FILE pointer points right at the beginning of the entries which share the format: row col value
 */
 void parse_coo(struct COOMatrix* coo_mtx, FILE* file);
+
+/* This function prints header/metadata information about the parsed matrix.
+* 
+* Args:
+*     mtx_type (struct MtxType*): Pointer to a struct where the header information will be stored.
+*     coo_mtx (struct COOMatrix*): Pointer to a struct that will create the COOMatrix format.
+*/
+void print_matrix_info(struct MtxType* mtx_type, struct COOMatrix* coo_mtx);
 
 /* This function opens a files and exits if the file name does not exist.
 * 

@@ -10,9 +10,9 @@
 *     nnz (long): The number of non-zero elements.
 */
 struct Metadata {
-    long    rows;
-    long    cols;
-    long    nnz;
+    int    rows;
+    int    cols;
+    int    nnz;
 };
 
 /*
@@ -26,8 +26,8 @@ struct Metadata {
  */
 struct COOMatrix {
     struct Metadata metadata;
-    long    *row_idx;
-    long    *col_idx;
+    int    *row_idx;
+    int    *col_idx;
     double *values;
 };
 

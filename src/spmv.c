@@ -1,11 +1,13 @@
 #include <stdio.h>
-#include "../include/parser.h"
 #include "../include/csr.h"
+#include "../include/spmv.h"
 
-int main(int argc, char* argv[]){
-    struct COOMatrix* coo_mtx = coo_parser(argv[1]);
-    struct CSRMatrix* csr_matrix = csr_from_coo(coo_mtx);
-    
-    coo_free(coo_mtx);
-    //csr_free(csr);
+void spmv_csr(struct CSRMatrix* csr, double* x, double* y) {
+    for (int i = 0; i < csr->n; i++) {
+        double sum = 0.0;
+        for (int j = csr->row_ptr[i]; j < csr->row_ptr[i+1]; j++) {
+            sum += csr->values[j] * x[csr->col_idx[j]];
+        }
+        y[i] = sum;
+     }
 }
