@@ -3,7 +3,7 @@
 #include "coo.h"
 
 /*
-* This struct represents the format of a Compressed Sparse Row matrix.
+* Represents the format of a Compressed Sparse Row matrix.
 *
 * Fields:
 *     n (long): The number of rows the matrix has.

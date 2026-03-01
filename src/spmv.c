@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <omp.h>
 #include "../include/csr.h"
 #include "../include/spmv.h"
 
 void spmv_csr(struct CSRMatrix* csr, double* x, double* y) {
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < csr->n; i++) {
         double sum = 0.0;
         for (int j = csr->row_ptr[i]; j < csr->row_ptr[i+1]; j++) {
