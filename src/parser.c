@@ -45,7 +45,7 @@ void print_matrix_info(struct MtxType* mtx_type, struct COOMatrix* coo_mtx) {
     printf("Format: %s\n",   mtx_type->format);
     printf("Field:  %s\n",   mtx_type->field);
     printf("Symmetry: %s\n", mtx_type->symmetry);
-    printf("Rows: %ld, Cols: %ld, NNZ: %ld\n",
+    printf("Rows: %d, Cols: %d, NNZ: %d\n",
            coo_mtx->metadata.rows,
            coo_mtx->metadata.cols,
            coo_mtx->metadata.nnz);
