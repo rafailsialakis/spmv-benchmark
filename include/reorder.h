@@ -1,6 +1,5 @@
-#ifndef REORDERING_H
-#define REORDERING_H
-
+#ifndef REORDER_H
+#define REORDER_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <metis.h>
@@ -45,7 +44,10 @@ int* compute_permutation_metis(struct CSRMatrix* csr);
  *     p (int*): Permutation vector of size csr->n.
  *
  * Returns:
- *     New permuted CSRMatrix. Caller is responsible for freeing it with csr_free().
+ *     New permuted CSRMatrix. 
+ * 
+ * Note:
+ *     Caller is responsible for freeing it with csr_free().
  */
 struct CSRMatrix* permute_csr(struct CSRMatrix* csr, int* p);
 
