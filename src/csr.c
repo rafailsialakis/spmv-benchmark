@@ -21,7 +21,7 @@ struct CSRMatrix* csr_from_coo(struct COOMatrix* coo_mtx){
         int row = coo_mtx->row_idx[k];
         int pos = csr_mtx->row_ptr[row] + cursor[row]++;
         csr_mtx->col_idx[pos] = coo_mtx->col_idx[k];
-        csr_mtx->values[pos] = csr_mtx->values[k];\
+        csr_mtx->values[pos] = coo_mtx->values[k];
     }
     free(cursor);
     return csr_mtx;
