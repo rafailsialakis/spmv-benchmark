@@ -1,18 +1,49 @@
 /*
-* This header file  contains the structs and functions needed to parse a *.mtx file and generate its Coordinate Format.
-* The format of a *.mtx file is:
-*
-* %%MatrixMarket <object> <format> <field> <symmetry>
-* % Comment lines (optional)
-* <nrows> <ncols> <nnz>
-* <i_1> <j_1> <value_1>
-* <i_2> <j_2> <value_2>
-* ...
-* <i_n> <j_n> <value_n>
-*/
+ * This header file defines the data structures and functions required
+ * to parse a Matrix Market (.mtx) file and represent it in Coordinate (COO) format.
+ *
+ * A Matrix Market file follows the structure below:
+ *
+ *   %%MatrixMarket <object> <format> <field> <symmetry>
+ *   % Optional comment lines (each starting with '%')
+ *   <nrows> <ncols> <nnz>
+ *   <row_1> <col_1> <value_1>
+ *   <row_2> <col_2> <value_2>
+ *   ...
+ *   <row_n> <col_n> <value_n>
+ *
+ * where:
+ *   - <object>   : typically "matrix"
+ *   - <format>   : usually "coordinate" (sparse representation)
+ *   - <field>    : data type (e.g., real, integer, complex, pattern)
+ *   - <symmetry> : symmetry type (e.g., general, symmetric, skew-symmetric, hermitian)
+ *   - <nrows>    : number of matrix rows
+ *   - <ncols>    : number of matrix columns
+ *   - <nnz>      : number of non-zero entries
+ *   - <row_i>, <col_i> : 1-based indices of the i-th non-zero element
+ *   - <value_i>  : value of the i-th non-zero element (omitted if field = pattern)
+ *
+ * The Coordinate (COO) format stores the matrix as three parallel arrays:
+ *   - row indices
+ *   - column indices
+ *   - corresponding non-zero values
+ *
+ * Note: Matrix Market indices are 1-based and may need conversion to 0-based
+ * indexing depending on the internal representation.
+ */
+
 #ifndef    PARSER_H   
 #define    PARSER_H
-#include "coo.h"
+#define    IS_REAL(t)      (strcmp((t)->field,    "real")      == 0)
+#define    IS_PATTERN(t)   (strcmp((t)->field,    "pattern")   == 0)
+#define    IS_INTEGER(t)   (strcmp((t)->field,    "integer")   == 0)
+#define    IS_COMPLEX(t)   (strcmp((t)->field,    "complex")   == 0)
+#define    IS_SYMMETRIC(t) (strcmp((t)->symmetry, "symmetric") == 0)
+#define    IS_GENERAL(t)   (strcmp((t)->symmetry, "general")   == 0)
+#define    IS_SKEW(t)      (strcmp((t)->symmetry, "skew-symmetric") == 0)
+#define    IS_COORDINATE(t)(strcmp((t)->format,   "coordinate") == 0)
+#define    IS_ARRAY(t)     (strcmp((t)->format,   "array")      == 0)
+#include   "coo.h"
 
 /*
 * Represents the header information of a SuiteSparse .mtx file.
@@ -73,7 +104,7 @@ void parse_metadata(struct MtxType* mtx_type, struct COOMatrix* coo_mtx, FILE* f
 *       If it is not initialized, memory cannot be allocated.
 *     - The FILE pointer points right at the beginning of the entries which share the format: row col value
 */
-void parse_coo(struct COOMatrix* coo_mtx, FILE* file);
+void parse_coo(struct COOMatrix* coo_mtx, struct MtxType* mtx_type, FILE* file);
 
 /* This function prints header/metadata information about the parsed matrix.
 * 
