@@ -12,8 +12,7 @@ struct COOMatrix* coo_parser(char* filename) {
 
     parse_header(mtx_type, mtx);
     parse_metadata(mtx_type, coo_mtx, mtx);
-    print_matrix_info(mtx_type, coo_mtx);
-    parse_coo(coo_mtx, mtx);
+    parse_coo(coo_mtx, mtx_type, mtx);
 
     fclose(mtx);
     free(mtx_type);
@@ -51,25 +50,61 @@ void print_matrix_info(struct MtxType* mtx_type, struct COOMatrix* coo_mtx) {
            coo_mtx->metadata.nnz);
 }
 
-void parse_coo(struct COOMatrix* coo_mtx, FILE* file) {
-    coo_mtx->row_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
-    coo_mtx->col_idx = malloc(sizeof(int)    * coo_mtx->metadata.nnz);
-    coo_mtx->values  = malloc(sizeof(double) * coo_mtx->metadata.nnz);
+void parse_coo(struct COOMatrix* coo_mtx, struct MtxType* mtx_type, FILE* file) {
+    int nnz_stored = coo_mtx->metadata.nnz;
+
+    // Temporary read stored indexes
+    int*    tmp_row = malloc(nnz_stored * sizeof(int));
+    int*    tmp_col = malloc(nnz_stored * sizeof(int));
+    double* tmp_val = malloc(nnz_stored * sizeof(double));
 
     char line[256];
-    for (int i = 0; i < coo_mtx->metadata.nnz; i++) {
+    for (int i = 0; i < nnz_stored; i++) {
         fgets(line, sizeof(line), file);
-        sscanf(line, "%d %d %lf", &coo_mtx->row_idx[i],
-                                   &coo_mtx->col_idx[i],
-                                   &coo_mtx->values[i]);
-        // Transform into 0-based indexing.
-        coo_mtx->row_idx[i]--;
-        coo_mtx->col_idx[i]--;
+        sscanf(line, "%d %d %lf", &tmp_row[i], &tmp_col[i], &tmp_val[i]);
+        tmp_row[i]--;
+        tmp_col[i]--;
     }
+
+    // Count nnz
+    int real_nnz = nnz_stored;
+    if (IS_SYMMETRIC(mtx_type))
+        for (int i = 0; i < nnz_stored; i++)
+            if (tmp_row[i] != tmp_col[i])
+                real_nnz++;
+
+    // Update metadata
+    coo_mtx->metadata.nnz = real_nnz;
+
+    // Allocate new nnz
+    coo_mtx->row_idx = malloc(real_nnz * sizeof(int));
+    coo_mtx->col_idx = malloc(real_nnz * sizeof(int));
+    coo_mtx->values  = malloc(real_nnz * sizeof(double));
+
+    // Fill COO
+    int idx = 0;
+    for (int i = 0; i < nnz_stored; i++) {
+        coo_mtx->row_idx[idx] = tmp_row[i];
+        coo_mtx->col_idx[idx] = tmp_col[i];
+        coo_mtx->values[idx]  = tmp_val[i];
+        idx++;
+
+        // If is symmetric & non-diagonal
+        if (IS_SYMMETRIC(mtx_type) && tmp_row[i] != tmp_col[i]) {
+            coo_mtx->row_idx[idx] = tmp_col[i];
+            coo_mtx->col_idx[idx] = tmp_row[i];
+            coo_mtx->values[idx]  = tmp_val[i];
+            idx++;
+        }
+    }
+    print_matrix_info(mtx_type, coo_mtx);
+    free(tmp_row);
+    free(tmp_col);
+    free(tmp_val);
 }
 
 FILE* open_file(char* filename){
-    FILE* f = fopen(filename, "r");
+    FILE* f = fopen(filename, "r"); 
     if(f == NULL){
         printf("Error: Failed to open file %s: No such file or directory\n",filename);
         exit(EXIT_FAILURE);
