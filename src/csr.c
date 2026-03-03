@@ -7,7 +7,7 @@ struct CSRMatrix* csr_from_coo(struct COOMatrix* coo_mtx){
     struct CSRMatrix* csr_mtx = (struct CSRMatrix*) malloc(sizeof(struct CSRMatrix));
     csr_mtx->n = coo_mtx->metadata.rows;
     csr_mtx->nnz = coo_mtx->metadata.nnz;
-    csr_mtx->row_ptr = (int*) calloc(csr_mtx->n,sizeof(int));
+    csr_mtx->row_ptr = (int*) calloc(csr_mtx->n+1,sizeof(int));
     csr_mtx->col_idx = (int*) malloc(sizeof(int) * (csr_mtx->nnz));
     csr_mtx->values = (double*) malloc(sizeof(double) * (csr_mtx->nnz));
     for (int i = 0; i < csr_mtx->nnz; i++){
