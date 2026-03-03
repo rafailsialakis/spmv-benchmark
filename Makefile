@@ -5,7 +5,7 @@ SRC = src/parser.c   \
       src/csr.c      \
       src/spmv.c     \
       src/timer.c    \
-      src/reordering.c  \
+      src/reorder.c  \
       src/main.c
 
 BIN = bin/spmv-benchmark
