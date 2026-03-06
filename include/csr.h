@@ -1,6 +1,6 @@
+#include "coo.h"
 #ifndef CSR_H
 #define CSR_H
-#include "coo.h"
 
 /*
 * Represents the format of a Compressed Sparse Row matrix.

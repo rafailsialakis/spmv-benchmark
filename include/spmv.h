@@ -1,6 +1,6 @@
+#include "csr.h"
 #ifndef SPMV_H
 #define SPMV_H
-#include "csr.h"
 
 /*
  * Computes y = A * x using CSR format.

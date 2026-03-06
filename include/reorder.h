@@ -1,10 +1,10 @@
+#include "csr.h"
+#include <stdio.h>
+#include <metis.h>
+#include <stdlib.h>
+#include <suitesparse/cs.h>
 #ifndef REORDER_H
 #define REORDER_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <metis.h>
-#include <suitesparse/cs.h>
-#include "csr.h"
 
 typedef enum {
     REORDER_NONE,
@@ -22,7 +22,7 @@ typedef enum {
  *     Permutation vector p[] of size csr->n.
  *     Caller is responsible for freeing it.
  */
-int* compute_permutation_rcm(struct CSRMatrix* csr);
+int* compute_permutation_amd(struct CSRMatrix* csr);
 
 /*
  * Computes a permutation vector using METIS nested dissection.

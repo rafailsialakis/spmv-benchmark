@@ -31,7 +31,7 @@
  * Note: Matrix Market indices are 1-based and may need conversion to 0-based
  * indexing depending on the internal representation.
  */
-
+#include   "coo.h"
 #ifndef    PARSER_H   
 #define    PARSER_H
 #define    IS_REAL(t)      (strcmp((t)->field,    "real")      == 0)
@@ -43,7 +43,6 @@
 #define    IS_SKEW(t)      (strcmp((t)->symmetry, "skew-symmetric") == 0)
 #define    IS_COORDINATE(t)(strcmp((t)->format,   "coordinate") == 0)
 #define    IS_ARRAY(t)     (strcmp((t)->format,   "array")      == 0)
-#include   "coo.h"
 
 /*
 * Represents the header information of a SuiteSparse .mtx file.
