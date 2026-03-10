@@ -1,8 +1,78 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "../include/csr.h"
+#include "../include/queue.h"
 #include "../include/reorder.h"
 
-int* compute_permutation_rcm(struct CSRMatrix* csr) {
+struct GraphNode* g_nodes; 
+
+int comp(const void *a, const void *b) {
+    int na = *(int*) a;
+    int nb = *(int*) b;
+    return g_nodes[na].degree - g_nodes[nb].degree;
+}
+
+int find_start_node(struct GraphNode* nodes, int n){
+    int start = 0;
+    int min_degree = INT_MAX;
+    for(int i = 0; i < n; i++){
+        if(nodes[i].degree < min_degree){
+            min_degree = nodes[i].degree;
+            start = i;
+        }
+    }
+    return start;
+}
+
+int* compute_permutation_rcm(struct CSRMatrix* csr){
+    struct GraphNode* nodes = malloc(sizeof(struct GraphNode) * csr->n);
+    for(int i = 0; i < csr->n; i++){
+        nodes[i].id = i;
+        nodes[i].degree = 0;
+        nodes[i].neighbours = NULL;
+        for(int j = csr->row_ptr[i]; j < csr->row_ptr[i+1]; j++){
+            if(i != csr->col_idx[j]){
+                nodes[i].neighbours = realloc(nodes[i].neighbours, sizeof(int) * (nodes[i].degree + 1));
+                nodes[i].neighbours[nodes[i].degree] = csr->col_idx[j];
+                nodes[i].degree++;
+            }
+        }
+    }
+    struct Queue q;
+    q.data = malloc(sizeof(int) * csr->n);
+    q.head = 0;
+    q.tail = 0;
+    g_nodes = nodes;
+    bool* visited = calloc(csr->n, sizeof(bool));
+    int* perm = malloc(sizeof(int) * csr->n);
+    int* rev_perm = malloc(sizeof(int) * csr->n);
+    int perm_idx = 0;
+    int start = find_start_node(nodes, csr->n);
+    enqueue(&q, start);
+    visited[start] = true;
+    while(!is_empty(&q)){
+        int element = dequeue(&q);
+        perm[perm_idx++] = element;
+        qsort(nodes[element].neighbours, nodes[element].degree, sizeof(int), comp);
+        for(int i = 0; i < nodes[element].degree; i++){
+            int neighbour = nodes[element].neighbours[i];
+            if(!visited[neighbour]){
+                visited[neighbour] = true;
+                enqueue(&q, neighbour);
+            }
+        }
+    }
+    for(int i = 0; i < csr->n; i++)
+        rev_perm[i] = perm[csr->n - 1 - i];
+    free(q.data);
+    free(perm);
+    free(visited);
+    for(int i = 0; i < csr->n; i++) free(nodes[i].neighbours);
+    free(nodes);
+    return rev_perm;
+}
+
+int* compute_permutation_amd(struct CSRMatrix* csr) {
     cs* A  = cs_spalloc(csr->n, csr->n, csr->nnz, 1, 0);
     // For symmetric matrices CSC == CSR
     A->p  = csr->row_ptr;   
@@ -10,8 +80,14 @@ int* compute_permutation_rcm(struct CSRMatrix* csr) {
     A->x  = csr->values;
     A->nz = -1;
 
-    int* p = cs_symrcm(A);
+    int* p = cs_amd(1,A);
+    // In order to avoid corrupting memory
+    A->p = NULL;
+    A->i = NULL;
+    A->x = NULL;
+
     cs_spfree(A);
+    
     return p;
 }
 
@@ -20,7 +96,6 @@ int* compute_permutation_metis(struct CSRMatrix* csr) {
     idx_t* p    = malloc(n * sizeof(idx_t));
     idx_t* ip   = malloc(n * sizeof(idx_t));
 
-    // Φτιάξε row_ptr και col_idx χωρίς διαγώνια
     idx_t* row_ptr = malloc((n+1) * sizeof(idx_t));
     idx_t* col_idx = malloc(csr->nnz * sizeof(idx_t));
 
@@ -28,7 +103,7 @@ int* compute_permutation_metis(struct CSRMatrix* csr) {
     row_ptr[0] = 0;
     for (int i = 0; i < n; i++) {
         for (int j = csr->row_ptr[i]; j < csr->row_ptr[i+1]; j++) {
-            if (csr->col_idx[j] != i) {  // παράλειψε διαγώνιο
+            if (csr->col_idx[j] != i) {
                 col_idx[nnz_no_diag++] = csr->col_idx[j];
             }
         }
@@ -36,10 +111,10 @@ int* compute_permutation_metis(struct CSRMatrix* csr) {
     }
 
     METIS_NodeND(&n, row_ptr, col_idx, NULL, NULL, p, ip);
-
     free(ip);
     free(row_ptr);
     free(col_idx);
+    
     return (int*) p;
 }
 
