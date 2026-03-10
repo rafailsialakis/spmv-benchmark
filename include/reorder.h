@@ -12,6 +12,15 @@ typedef enum {
     REORDER_METIS
 } ReorderType;
 
+struct GraphNode{
+    int id;
+    int degree;
+    int* neighbours;
+};
+
+
+int* compute_permutation_rcm(struct CSRMatrix* csr);
+
 /*
  * Computes a permutation vector using RCM (via SuiteSparse).
  *
