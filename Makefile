@@ -14,8 +14,8 @@ run: $(BIN)
 	$(BIN) $(MTX)
 
 batch: $(BIN)
-	@mkdir -p results
-	@for mtx in matrices/*.mtx; do \
+	mkdir -p results
+	for mtx in matrices/*.mtx; do \
 		$(BIN) $$(basename $$mtx) > /dev/null; \
 	done
 
