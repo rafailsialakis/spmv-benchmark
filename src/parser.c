@@ -40,7 +40,7 @@ void parse_metadata(struct MtxType* mtx_type, struct COOMatrix* coo_mtx, FILE* f
 }
 
 void print_matrix_info(struct MtxType* mtx_type, struct COOMatrix* coo_mtx) {
-    printf("Matrix: %s\n",   mtx_type->name);
+    printf("\nMatrix: %s\n",   mtx_type->name);
     printf("Format: %s\n",   mtx_type->format);
     printf("Field:  %s\n",   mtx_type->field);
     printf("Symmetry: %s\n", mtx_type->symmetry);
