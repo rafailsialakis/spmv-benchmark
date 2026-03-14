@@ -73,14 +73,15 @@ void run_all_benchmarks(struct CSRMatrix* csr,
 
     struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_metis};
     const char* reorderings[4]   = {"none", "rcm", "amd", "metis"};
-    int thread_counts[4]         = {1, 2, 4, 8};
+    int thread_counts[3]         = {1, 2, 4};
 
-    for (int ti = 0; ti < 4; ti++) {
+    for (int ti = 0; ti < 3; ti++) {
         int threads = thread_counts[ti];
         omp_set_num_threads(threads);
         BenchResult rax[4], ios[4], cold[4];
         
         printf("\nThreads: %d\n", threads);
+        printf("%s\t%s\t%s\t%s\n","Method", "Reorder", "T(ms)", "GFLOP/s");
         for (int r = 0; r < 4; r++) {
             rax[r]  = run_benchmark_rax( reorderings[r], matrices[r], x, y);
             ios[r]  = run_benchmark_ios( reorderings[r], matrices[r], x, y);
