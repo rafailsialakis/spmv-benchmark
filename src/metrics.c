@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "../include/csr.h"
 #include "../include/metrics.h"
@@ -17,7 +18,7 @@ int compute_bandwidth(struct CSRMatrix* csr){
 }
 
 double compute_density(struct CSRMatrix* csr){
-    return (double) csr->nnz / (csr->n * csr->n);
+    return (double) csr->nnz / ((double)csr->n * csr->n);
 }
 
 double compute_imbalance_ratio(struct CSRMatrix* csr, int threads){
@@ -33,5 +34,5 @@ double compute_imbalance_ratio(struct CSRMatrix* csr, int threads){
             max_nnz_thread = nnz_thread;
         }
     }
-    return max_nnz_thread / (csr->nnz / threads);
+    return (double)max_nnz_thread / ((double)csr->nnz / threads);
 }
