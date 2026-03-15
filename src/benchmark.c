@@ -6,8 +6,6 @@
 #include "../include/timer.h"
 #include "../include/benchmark.h"
 
-
-
 double compute_gflops(int nnz, double time_sec) {
     return (2.0 * nnz) / (time_sec * 1e9);
 }
