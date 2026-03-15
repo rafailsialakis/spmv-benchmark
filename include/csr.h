@@ -1,4 +1,5 @@
 #include "coo.h"
+
 #ifndef CSR_H
 #define CSR_H
 
@@ -41,6 +42,13 @@ struct CSRMatrix{
  *     - The COO matrix does not need to be sorted by row.
  */
 struct CSRMatrix* csr_from_coo(struct COOMatrix* coo_mtx);
+
+/*
+ * Used to free the fields of the csr struct and the struct itself.
+ * 
+ * Args: 
+ *     csr (struct CSRMatrix*): Pointer to a CSR Matrix struct that will be freed.
+ */
 void csr_free(struct CSRMatrix* csr);
 
 #endif

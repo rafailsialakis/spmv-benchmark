@@ -1,9 +1,10 @@
 #include "csr.h"
+
 #ifndef SPMV_H
 #define SPMV_H
 
 /*
- * Computes y = A * x using CSR format.
+ * Computes y = A * x using CSR format. It runs in parallel using omp static scheduling.
  *
  * Args:
  *     csr (struct CSRMatrix*): The sparse matrix in CSR format.

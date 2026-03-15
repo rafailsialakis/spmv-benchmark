@@ -3,15 +3,27 @@
 #include <metis.h>
 #include <stdlib.h>
 #include <suitesparse/cs.h>
+
 #ifndef REORDER_H
 #define REORDER_H
 
+/*
+ * Defines the 3 types of reorderings that will be used in this benchmark. 
+ */
 typedef enum {
     REORDER_NONE,
     REORDER_RCM,
     REORDER_METIS
 } ReorderType;
 
+/*
+ * Defiens a node of the Adjacency Matrix that is used in the RCM reordering method.
+ * 
+ * Args:
+ *     id (int): The id of each node
+ *     degree (int): Total number of connection this node has
+ *     neighbours (int*): Array of the connected nodes.
+ */
 struct GraphNode{
     int id;
     int degree;
