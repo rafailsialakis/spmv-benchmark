@@ -50,18 +50,27 @@ int* compute_permutation_rcm(struct CSRMatrix* csr){
     int start = find_start_node(nodes, csr->n);
     enqueue(&q, start);
     visited[start] = true;
-    while(!is_empty(&q)){
-        int element = dequeue(&q);
-        perm[perm_idx++] = element;
-        qsort(nodes[element].neighbours, nodes[element].degree, sizeof(int), comp);
-        for(int i = 0; i < nodes[element].degree; i++){
-            int neighbour = nodes[element].neighbours[i];
-            if(!visited[neighbour]){
-                visited[neighbour] = true;
-                enqueue(&q, neighbour);
+    do {
+        while(!is_empty(&q)){
+            int element = dequeue(&q);
+            perm[perm_idx++] = element;
+            qsort(nodes[element].neighbours, nodes[element].degree, sizeof(int), comp);
+            for(int i = 0; i < nodes[element].degree; i++){
+                int neighbour = nodes[element].neighbours[i];
+                if(!visited[neighbour]){
+                    visited[neighbour] = true;
+                    enqueue(&q, neighbour);
+                }
             }
         }
-    }
+        for(int i = 0; i < csr->n; i++){
+            if(!visited[i]){
+                visited[i] = true;
+                enqueue(&q, i);
+                break;
+            }
+        }
+    } while(!is_empty(&q));
     for(int i = 0; i < csr->n; i++)
         rev_perm[i] = perm[csr->n - 1 - i];
     free(q.data);
@@ -155,6 +164,7 @@ struct CSRMatrix* permute_csr(struct CSRMatrix* csr, int* p) {
             new_pos++;
         }
     }
+    
 
     free(inv_p);
     return new_csr;
