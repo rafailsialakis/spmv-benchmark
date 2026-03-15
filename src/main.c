@@ -40,11 +40,11 @@ void compute_matrix_metrics(struct CSRMatrix* csr,
                         struct CSRMatrix* csr_amd,
                         struct CSRMatrix* csr_metis,
                         struct Path* path){
-    FILE* metrics_csv  = open_csv("results/metrics.csv",  "matrix,category,bw,rcm_bw,amd_bw,metis_bw,lb,rcm_lb,amd_lb,metis_lb,density");
-    int bw = compute_bandwidth(csr);
-    int bw_rcm = compute_bandwidth(csr_rcm);
-    int bw_amd = compute_bandwidth(csr_amd);
-    int bw_metis = compute_bandwidth(csr_metis);
+    FILE* metrics_csv  = open_csv("results/metrics.csv",  "matrix,category,bw,rcm_bw,amd_bw,metis_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_metis_bw,lb,rcm_lb,amd_lb,metis_lb,density");
+    struct BWResult bw = compute_bandwidth(csr);
+    struct BWResult bw_rcm = compute_bandwidth(csr_rcm);
+    struct BWResult bw_amd = compute_bandwidth(csr_amd);
+    struct BWResult bw_metis = compute_bandwidth(csr_metis);
 
     double lb = compute_imbalance_ratio(csr,MAX_NUM_THREADS);
     double lb_rcm = compute_imbalance_ratio(csr_rcm,MAX_NUM_THREADS);
@@ -53,7 +53,7 @@ void compute_matrix_metrics(struct CSRMatrix* csr,
 
     double density = compute_density(csr);
 
-    fprintf(metrics_csv, "%s,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%e\n", path->file, path->folder, bw, bw_rcm, bw_amd, bw_metis, lb, lb_rcm, lb_amd, lb_metis, density);
+    fprintf(metrics_csv,"%s,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%e\n",path->file, path->folder,bw.max_bw, bw_rcm.max_bw, bw_amd.max_bw, bw_metis.max_bw, bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_metis.avg_bw, lb, lb_rcm, lb_amd, lb_metis, density);    
     fclose(metrics_csv);
 }
 
@@ -67,9 +67,9 @@ void run_all_benchmarks(struct CSRMatrix* csr,
     double* y = malloc(csr->n * sizeof(double));
     for (int i = 0; i < csr->n; i++) x[i] = 1.0;
 
-    FILE* rax_csv  = open_csv("results/rax.csv",  "matrix,reordering,threads,gflops,time_ms");
-    FILE* ios_csv  = open_csv("results/ios.csv",  "matrix,reordering,threads,gflops,time_ms");
-    FILE* cold_csv = open_csv("results/cold.csv", "matrix,reordering,threads,gflops,time_ms");
+    FILE* rax_csv  = open_csv("results/rax.csv",  "matrix,category,reordering,threads,gflops,time_ms");
+    FILE* ios_csv  = open_csv("results/ios.csv",  "matrix,category,reordering,threads,gflops,time_ms");
+    FILE* cold_csv = open_csv("results/cold.csv", "matrix,category,reordering,threads,gflops,time_ms");
 
     struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_metis};
     const char* reorderings[4]   = {"none", "rcm", "amd", "metis"};
@@ -89,9 +89,9 @@ void run_all_benchmarks(struct CSRMatrix* csr,
         }
 
         for (int r = 0; r < 4; r++) {
-            fprintf(rax_csv,  "%s,%s,%d,%.4f,%.3f\n", path->file, reorderings[r], threads, rax[r].gflops,  rax[r].time_ms);
-            fprintf(ios_csv,  "%s,%s,%d,%.4f,%.3f\n", path->file, reorderings[r], threads, ios[r].gflops,  ios[r].time_ms);
-            fprintf(cold_csv, "%s,%s,%d,%.4f,%.3f\n", path->file, reorderings[r], threads, cold[r].gflops, cold[r].time_ms);
+            fprintf(rax_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, rax[r].gflops,  rax[r].time_ms);
+            fprintf(ios_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, ios[r].gflops,  ios[r].time_ms);
+            fprintf(cold_csv, "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, cold[r].gflops, cold[r].time_ms);
         }
     }
 
