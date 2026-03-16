@@ -66,7 +66,7 @@ BenchResult run_benchmark_rax(const char* label, struct CSRMatrix* csr, double* 
 /* Runs the benchmark using the Input Output swap measure methodology. 
  * This methodology is based on swapping the vector x with the vector y.
  * So we repeat the executions of the equations: y = A*x and x = A*y.
- * This simulates the behaviour of an iterative solver like conjugate gradient. 
+ * This simulates the behaviour of many iterative algorithms. 
  * 
  * Args:
  *     label (const char*): A pointer to a character array that represents the reordering methodology.
