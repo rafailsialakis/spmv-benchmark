@@ -14,11 +14,36 @@ struct BWResult {
 };
 
 /*
+ * Calculates average non-zeros per row.
+ *  
+ * Args: 
+ *     csr (struct CSRMatrix*): A pointer to the CSR Matrix
+ *  
+ * Returns:
+ *     avg (double): Average non-zeros / row 
+ */
+double avg_nnz_row(struct CSRMatrix* csr);
+
+/*
+ * Calculates the standard deviation of the non-zeros per row.
+ *
+ * Args:
+ *     csr (struct CSRMatrix*): A pointer to the CSR Matrix
+ * 
+ * Returns:
+ *     std (double): Standard deviation of non-zeros / row
+ */
+double std_nnz_row(struct CSRMatrix* csr);
+
+/*
  * Calculates matrix density based on the formula below: 
  * count_non-zero / (rows * cols)
  *
  * Args:
- *     csr (struct CSRMatrix*): 
+ *     csr (struct CSRMatrix*): A pointer to the CSR Matrix
+ * 
+ * Returns:
+ *     density (double): The density of the matrix provided
  */
 double compute_density(struct CSRMatrix* csr);
 

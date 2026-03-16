@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "../include/csr.h"
@@ -24,6 +25,21 @@ struct BWResult compute_bandwidth(struct CSRMatrix* csr){
 
 double compute_density(struct CSRMatrix* csr){
     return (double) csr->nnz / ((double)csr->n * csr->n);
+}
+
+double avg_nnz_row(struct CSRMatrix* csr){
+    return (double) csr->nnz / (double) csr->n;
+}
+
+double std_nnz_row(struct CSRMatrix* csr){
+    int nnz;
+    double avg = avg_nnz_row(csr);
+    double sum = 0;
+    for(int i = 0; i < csr->n; i++){
+        nnz = csr->row_ptr[i+1] - csr->row_ptr[i];
+        sum += (nnz - avg) * (nnz - avg);
+    }
+    return sqrt(sum / (double)csr->n);
 }
 
 double compute_imbalance_ratio(struct CSRMatrix* csr, int threads){

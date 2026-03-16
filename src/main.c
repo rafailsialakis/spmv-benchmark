@@ -16,7 +16,6 @@ int main(int argc, char* argv[]) {
         printf("Usage: %s <file.mtx>\n", argv[0]);
         return EXIT_FAILURE;
     }
-
     setenv("OMP_PROC_BIND", "close", 1);
     setenv("OMP_PLACES",    "cores", 1);
 
@@ -35,12 +34,8 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void compute_matrix_metrics(struct CSRMatrix* csr,
-                        struct CSRMatrix* csr_rcm,
-                        struct CSRMatrix* csr_amd,
-                        struct CSRMatrix* csr_metis,
-                        struct Path* path){
-    FILE* metrics_csv  = open_csv("results/metrics.csv",  "matrix,category,bw,rcm_bw,amd_bw,metis_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_metis_bw,lb,rcm_lb,amd_lb,metis_lb,density");
+void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Path* path){
+    FILE* metrics_csv  = open_csv("results/metrics.csv",  "matrix,category,n,nnz,avg_nnz_row,std_nnz_row,bw,rcm_bw,amd_bw,metis_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_metis_bw,lb,rcm_lb,amd_lb,metis_lb,density");
     struct BWResult bw = compute_bandwidth(csr);
     struct BWResult bw_rcm = compute_bandwidth(csr_rcm);
     struct BWResult bw_amd = compute_bandwidth(csr_amd);
@@ -51,18 +46,15 @@ void compute_matrix_metrics(struct CSRMatrix* csr,
     double lb_amd = compute_imbalance_ratio(csr_amd,MAX_NUM_THREADS);
     double lb_metis = compute_imbalance_ratio(csr_metis,MAX_NUM_THREADS);
 
+    double avg_nnz = avg_nnz_row(csr);
+    double std_nnz = std_nnz_row(csr);
     double density = compute_density(csr);
 
-    fprintf(metrics_csv,"%s,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%e\n",path->file, path->folder,bw.max_bw, bw_rcm.max_bw, bw_amd.max_bw, bw_metis.max_bw, bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_metis.avg_bw, lb, lb_rcm, lb_amd, lb_metis, density);    
+    fprintf(metrics_csv,"%s,%s,%d,%d,%.2f,%.2f,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%e\n",path->file,path->folder,csr->n,csr->nnz,avg_nnz,std_nnz,bw.max_bw,bw_rcm.max_bw,bw_amd.max_bw, bw_metis.max_bw, bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_metis.avg_bw, lb, lb_rcm, lb_amd, lb_metis, density);    
     fclose(metrics_csv);
 }
 
-void run_all_benchmarks(struct CSRMatrix* csr,
-                        struct CSRMatrix* csr_rcm,
-                        struct CSRMatrix* csr_amd,
-                        struct CSRMatrix* csr_metis,
-                        struct Path* path) {
-
+void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Path* path) {
     double* x = malloc(csr->n * sizeof(double));
     double* y = malloc(csr->n * sizeof(double));
     for (int i = 0; i < csr->n; i++) x[i] = 1.0;
@@ -99,12 +91,7 @@ void run_all_benchmarks(struct CSRMatrix* csr,
     free(x); free(y);
 }
 
-void cleanup(struct CSRMatrix* csr,
-             struct CSRMatrix* csr_rcm,
-             struct CSRMatrix* csr_amd,
-             struct CSRMatrix* csr_metis,
-             struct Permutations* perm,
-             struct Path* path) {
+void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Permutations* perm, struct Path* path) {
     csr_free(csr); csr_free(csr_rcm);
     csr_free(csr_amd); csr_free(csr_metis);
     free(perm->rcm_perm); free(perm->amd_perm); free(perm->metis_perm);
@@ -117,8 +104,14 @@ void cleanup(struct CSRMatrix* csr,
 struct Path* split_path(char* arg) {
     struct Path* local_path = malloc(sizeof(struct Path));
     char* copy = strdup(arg);
+    
     local_path->folder = strdup(strtok(copy, "/"));
-    local_path->file   = strdup(strtok(NULL, "/"));
+    
+    char* file = strtok(NULL, "/");
+    char* dot = strrchr(file, '.');
+    if (dot) *dot = '\0';
+    local_path->file = strdup(file);
+    
     free(copy);
     return local_path;
 }
