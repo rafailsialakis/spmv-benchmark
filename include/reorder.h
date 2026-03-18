@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <metis.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <suitesparse/cs.h>
 
-#ifndef REORDER_H
-#define REORDER_H
+#ifndef    REORDER_H
+#define    REORDER_H
 
 /*
  * Defines the 3 types of reorderings that will be used in this benchmark. 
@@ -25,9 +26,9 @@ typedef enum {
  *     neighbours (int*): Array of the connected nodes.
  */
 struct GraphNode{
-    int id;
-    int degree;
-    int* neighbours;
+    int     id;
+    int     degree;
+    int*    neighbours;
 };
 
 

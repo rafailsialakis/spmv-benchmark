@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #ifndef    COO_H   
 #define    COO_H
 
@@ -26,9 +28,9 @@ struct Metadata {
  */
 struct COOMatrix {
     struct Metadata metadata;
-    int    *row_idx;
-    int    *col_idx;
-    double *values;
+    int            *row_idx;
+    int            *col_idx;
+    double         *values;
 };
 
 /*

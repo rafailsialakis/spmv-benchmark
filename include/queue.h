@@ -1,5 +1,5 @@
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef    QUEUE_H
+#define    QUEUE_H
 
 /*
  * Defines a Queue Data Structure
@@ -10,9 +10,9 @@
  *     tail (int): The index of the end of the queue
  */
 struct Queue {
-    int* data;
-    int head;
-    int tail;
+    int*    data;
+    int     head;
+    int     tail;
 };
 
 /*

@@ -1,15 +1,11 @@
-#include <omp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../include/parser.h"
 #include "../include/csr.h"
 #include "../include/spmv.h"
 #include "../include/main.h"
 #include "../include/timer.h"
+#include "../include/parser.h"
 #include "../include/metrics.h"
-#include "../include/benchmark.h"
 #include "../include/reorder.h"
+#include "../include/benchmark.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

@@ -1,4 +1,5 @@
 #include "csr.h"
+#include <omp.h>
 
 #ifndef SPMV_H
 #define SPMV_H

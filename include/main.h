@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#ifndef MAIN_H
-#define MAIN_H
-#define MAX_NUM_THREADS 4 
+#ifndef    MAIN_H
+#define    MAIN_H
+#define    MAX_NUM_THREADS 4 
 
 /*
  * Specifies the path of the *.mtx file. The path is: matrices/<field>/<matrix_file>
@@ -26,9 +26,9 @@ struct Path {
  *     metis_perm (int*): Permutation vector for METIS Reordering method
  */
 struct Permutations{
-    int* rcm_perm;
-    int* amd_perm;
-    int* metis_perm;
+    int*    rcm_perm;
+    int*    amd_perm;
+    int*    metis_perm;
 };
 
 /*

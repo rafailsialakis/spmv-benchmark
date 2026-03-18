@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "../include/queue.h"
 
 void enqueue(struct Queue* q, int val){

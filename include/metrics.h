@@ -1,3 +1,6 @@
+#include <math.h>
+#include <stdlib.h>
+
 #ifndef METRICS_H
 #define METRICS_H
 
@@ -9,8 +12,8 @@
  *     avg_bw (int): The Σi=0(|i-j|)/n.
  */
 struct BWResult {
-    int max_bw;
-    double avg_bw;
+    int     max_bw;
+    double  avg_bw;
 };
 
 /*

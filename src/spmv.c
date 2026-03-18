@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <omp.h>
 #include "../include/csr.h"
 #include "../include/spmv.h"
 

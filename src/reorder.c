@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdbool.h>
 #include "../include/csr.h"
 #include "../include/queue.h"

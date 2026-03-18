@@ -1,7 +1,7 @@
 #include "coo.h"
 
-#ifndef CSR_H
-#define CSR_H
+#ifndef    CSR_H
+#define    CSR_H
 
 /*
 * Represents the format of a Compressed Sparse Row matrix.
@@ -12,10 +12,10 @@
 *     nnz (long): The number of non-zero elements.
 */
 struct CSRMatrix{
-    int    n;      
-    int    nnz;    
-    int   *row_ptr;
-    int   *col_idx;
+    int     n;      
+    int     nnz;    
+    int    *row_ptr;
+    int    *col_idx;
     double *values;
 };
 

@@ -1,6 +1,3 @@
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "../include/csr.h"
 #include "../include/metrics.h"
 

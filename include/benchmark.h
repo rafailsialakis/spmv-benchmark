@@ -1,9 +1,9 @@
 #include "../include/csr.h"
 
-#ifndef BENCHMARK_H
-#define BENCHMARK_H
-#define N_RUNS 100
-#define WARMUP_RUNS 5
+#ifndef    BENCHMARK_H
+#define    BENCHMARK_H
+#define    N_RUNS 100
+#define    WARMUP_RUNS 5
 
 /* Represents the result of a Benchmark: 
  * 
@@ -12,8 +12,8 @@
  *     time (double): Time taken for SPMxV to execute
  */
 typedef struct {
-    double gflops;
-    double time_ms;
+    double     gflops;
+    double     time_ms;
 } BenchResult;
 
 /* Allocates 64MB of heap space, iterates them and frees the memory used.

@@ -31,18 +31,18 @@
  * Note: Matrix Market indices are 1-based and may need conversion to 0-based
  * indexing depending on the internal representation.
  */
-#include   "coo.h"
+
+#include "coo.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifndef    PARSER_H   
 #define    PARSER_H
 #define    IS_REAL(t)      (strcmp((t)->field,    "real")      == 0)
-#define    IS_PATTERN(t)   (strcmp((t)->field,    "pattern")   == 0)
 #define    IS_INTEGER(t)   (strcmp((t)->field,    "integer")   == 0)
-#define    IS_COMPLEX(t)   (strcmp((t)->field,    "complex")   == 0)
 #define    IS_SYMMETRIC(t) (strcmp((t)->symmetry, "symmetric") == 0)
 #define    IS_GENERAL(t)   (strcmp((t)->symmetry, "general")   == 0)
-#define    IS_SKEW(t)      (strcmp((t)->symmetry, "skew-symmetric") == 0)
-#define    IS_COORDINATE(t)(strcmp((t)->format,   "coordinate") == 0)
-#define    IS_ARRAY(t)     (strcmp((t)->format,   "array")      == 0)
 
 /*
 * Represents the header information of a SuiteSparse .mtx file.
