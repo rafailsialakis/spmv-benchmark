@@ -1,8 +1,10 @@
+import logging
 from utils import io
 from utils import plots
 from utils import tables
 
 def main():
+    io.init_logging()
     io.init_plt()
 
     df_metrics,df_cold_x86,df_ios_x86,df_rax_x86,df_reorder_x86,df_cold_arm,df_ios_arm,df_rax_arm,df_reorder_arm = io.read_files()

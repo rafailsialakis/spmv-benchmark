@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -43,6 +44,7 @@ def sparse_plot(path: str) -> None:
 
     name = path.split("/")[-1].split(".")[0]
     plt.savefig(f"plot/figures/{name}_sparsity_plot.pdf", dpi=300)
+    logging.info(f"{name}_sparsity_plot.pdf was saved successfully!")
     plt.show()
 
 """
@@ -89,6 +91,7 @@ def speedup_heatmap(df_param: pd.DataFrame, label: str):
 
     plt.tight_layout()
     plt.savefig(f"plot/figures/speedup_heatmap_{label}.pdf")
+    logging.info(f"speedup_heatmap_{label}.pdf was saved successfully!")
     plt.show()
 
 """
@@ -150,4 +153,5 @@ def arm_x86_comp(df_x86: pd.DataFrame, df_arm: pd.DataFrame):
     plt.tight_layout()
     # Save file
     plt.savefig(f"plot/figures/arm_vs_x86.pdf")
+    logging.info(f"arm_vs_x86.pdf was saved successfully!")
     plt.show()

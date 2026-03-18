@@ -1,5 +1,5 @@
 import pandas as pd
-
+import logging
 """
 Produces a LaTeX table with break-even iterations needed 
 
@@ -43,7 +43,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     df_be = pd.DataFrame(results)
     df_pivot = df_be.pivot(index='matrix', columns='reordering', values='breakeven')
 
-    # Sort based on smallest RCM break-even
+    # Is used to sort based on smallest RCM break-even
     def sort_key(val):
         try:
             return int(val)
@@ -78,6 +78,4 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     path = f'plot/figures/breakeven_table_{label}.tex'
     with open(path, 'w') as f:
         f.write(tex)
-
-    print(tex)
-    print(f'\nBreak even table saved to {path} successfully!')
+    logging.info(f"breakeven_table_{label}.tex was saved successfully!")

@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -20,6 +21,7 @@ def read_files() -> tuple:
     df_ios_arm = pd.read_csv("arm_results/ios.csv")
     df_rax_arm = pd.read_csv("arm_results/rax.csv")
     df_reorder_arm = pd.read_csv("arm_results/reorder_times.csv")
+    logging.info("DataFrames imported successfully!")
     return df_metrics, df_cold_x86, df_ios_x86, df_rax_x86, df_reorder_x86,df_cold_arm, df_ios_arm, df_rax_arm, df_reorder_arm
 
 """
@@ -39,3 +41,11 @@ def init_plt():
         "axes.formatter.use_mathtext": True,  
         "pgf.texsystem": "pdflatex",          
     })
+    logging.info("Parameters configured successfully!")
+
+def init_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    logging.info("Logging was initialized successfully!")
