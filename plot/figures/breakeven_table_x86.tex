@@ -1,0 +1,25 @@
+\begin{table}[htbp]
+  \centering
+  \label{tab:breakeven_x86}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Matrix} & \textbf{RCM} & \textbf{AMD} & \textbf{METIS} \\
+    \midrule
+    nv2 & 57 & 113 & 426 \\
+    circuit5M & 92 & 483 & \textit{slow} \\
+    audikw\_1 & 135 & 84 & 150 \\
+    G3\_circuit & 174 & 715 & 3836 \\
+    dgreen & 284 & 509 & 1921 \\
+    crystk01 & 459 & 270 & 1011 \\
+    atmosmodd & 562 & \textit{slow} & \textit{slow} \\
+    Hook\_1498 & 625 & 864 & 1777 \\
+    inline\_1 & 681 & 416 & 921 \\
+    com-Amazon & 862 & \textit{slow} & \textit{slow} \\
+    thermal2 & 1033 & 1223 & 5289 \\
+    s3rmt3m3 & 2340 & 875 & \textit{slow} \\
+    Flan\_1565 & \textit{slow} & \textit{slow} & \textit{slow} \\
+    Geo\_1438 & \textit{slow} & 5557 & 8193 \\
+    kkt\_power & \textit{slow} & $>$10000 & \textit{slow} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
