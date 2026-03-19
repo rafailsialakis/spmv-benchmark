@@ -56,7 +56,7 @@ int* compute_permutation_amd(struct CSRMatrix* csr);
  *     Permutation vector p[] of size csr->n.
  *     Caller is responsible for freeing it.
  */
-int* compute_permutation_metis(struct CSRMatrix* csr);
+int* compute_permutation_nd(struct CSRMatrix* csr);
 
 /*
  * Applies a permutation vector to a CSR matrix (A' = P·A·Pᵀ).

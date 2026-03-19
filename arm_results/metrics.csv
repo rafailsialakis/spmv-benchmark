@@ -1,4 +1,4 @@
-matrix,category,n,nnz,avg_nnz_row,std_nnz_row,bw,rcm_bw,amd_bw,metis_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_metis_bw,lb,rcm_lb,amd_lb,metis_lb,density
+matrix,category,n,nnz,avg_nnz_row,std_nnz_row,bw,rcm_bw,amd_bw,nd_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_nd_bw,lb,rcm_lb,amd_lb,nd_lb,density
 crystk01,FEM,4875,315891,64.80,16.03,239,392,4630,3860,136.77,148.35,365.27,354.00,1.03,1.03,1.02,1.04,1.329193e-02
 inline_1,FEM,503712,36816342,73.09,35.63,502403,5996,348163,323540,55064.44,1335.32,7454.03,3518.62,1.12,1.02,1.02,1.03,1.451029e-04
 Flan_1565,FEM,1564794,117406044,75.03,11.43,20702,23159,887791,1419524,7307.33,10350.78,15981.77,8668.97,1.00,1.00,1.00,1.00,4.794862e-05

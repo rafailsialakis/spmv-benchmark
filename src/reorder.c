@@ -98,7 +98,7 @@ int* compute_permutation_amd(struct CSRMatrix* csr) {
     return p;
 }
 
-int* compute_permutation_metis(struct CSRMatrix* csr) {
+int* compute_permutation_nd(struct CSRMatrix* csr) {
     idx_t  n    = csr->n;
     idx_t* p    = malloc(n * sizeof(idx_t));
     idx_t* ip   = malloc(n * sizeof(idx_t));
