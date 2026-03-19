@@ -66,7 +66,7 @@ int* compute_permutation_nd(struct CSRMatrix* csr);
  *     p (int*): Permutation vector of size csr->n.
  *
  * Returns:
- *     New permuted CSRMatrix. 
+ *     New permuted CSRMatrisx. 
  * 
  * Note:
  *     Caller is responsible for freeing it with csr_free().
