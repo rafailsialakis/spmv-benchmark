@@ -23,13 +23,27 @@ struct Path {
  * Fields:
  *     rcm_perm (int*): Permutation vector for RCM Reordering method
  *     amd_perm (int*): Permutation vector for AMD Reordering method
- *     metis_perm (int*): Permutation vector for METIS Reordering method
+ *     nd_perm (int*): Permutation vector for METIS Reordering method
  */
 struct Permutations{
     int*    rcm_perm;
     int*    amd_perm;
-    int*    metis_perm;
+    int*    nd_perm;
 };
+
+/*
+ * Used to export the permutation vector into a .txt file specified by the given path
+ *
+ * Args:
+ *     csr (struct CSRMatrix*): A pointer to the parsed CSR Matrix
+ *     perm (struct Permutations*): A pointer to the struct with the saved permutation vectors
+ * 
+ * Note:
+ *     This function is NOT used, is created in order to generate sparsity patterns. Ignore any warnings!
+ *     This function exits the program with status code 1
+ */
+void export_permutations(struct CSRMatrix* csr, struct Permutations* perm);
+
 
 /*
  * Used to open a *.csv file with a specified header.
@@ -93,10 +107,10 @@ struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* nam
  *     csr (struct CSRMatrix*): Pointer to the original CSR matrix
  *     csr_rcm (struct CSRMatrix*): Pointer to the matrix reordered with RCM
  *     csr_amd (struct CSRMatrix*): Pointer to the matrix reordered with AMD
- *     csr_metis (struct CSRMatrix*): Pointer to the matrix reordered with METIS
+ *     csr_nd (struct CSRMatrix*): Pointer to the matrix reordered with METIS
  *     path (struct Path*): Pointer to the structure containing folder and file name
  */
-void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Path* path);
+void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path);
 
 /*
  * Runs all performance benchmarks for the original matrix and
@@ -107,10 +121,10 @@ void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, st
  *     csr (struct CSRMatrix*): Pointer to the original CSR matrix
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD reordered matrix
- *     csr_metis (struct CSRMatrix*): Pointer to the METIS reordered matrix
+ *     csr_nd (struct CSRMatrix*): Pointer to the METIS reordered matrix
  *     path (struct Path*): Pointer to the structure containing matrix path information
  */
-void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Path* path);
+void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path);
 
 /*
  * Frees all dynamically allocated memory used throughout the program.
@@ -120,11 +134,11 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct
  *     csr (struct CSRMatrix*): Pointer to the original CSR matrix
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD reordered matrix
- *     csr_metis (struct CSRMatrix*): Pointer to the METIS reordered matrix
+ *     csr_nd (struct CSRMatrix*): Pointer to the METIS reordered matrix
  *     perm (struct Permutations*): Pointer to the structure containing permutation vectors
  *     path (struct Path*): Pointer to the path structure
  */
-void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_metis, struct Permutations* perm, struct Path* path);
+void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Permutations* perm, struct Path* path);
 
 
 #endif
