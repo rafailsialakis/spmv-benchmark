@@ -18,26 +18,28 @@ Note:
     In order to run correctly the permutation vectors must be saved/updated for the given matrix
 """
 def sparse_plot(path: str) -> None:
+    logging.info("Generating sparsity patterns...")
     A = mmread(path).tocsr()
     # Load Permutation Vectors from .txt files
     perm_rcm = np.loadtxt("validation/rcm.txt", dtype=int)
     perm_amd = np.loadtxt("validation/amd.txt", dtype=int)
-    perm_metis = np.loadtxt("validation/metis.txt", dtype=int)
-
+    perm_nd = np.loadtxt("validation/nd.txt", dtype=int)
+    logging.info("Permutations parsed successfully!")
     # Permute matrix
     B = A[perm_rcm, :][:, perm_rcm]
     C = A[perm_amd, :][:, perm_amd]
-    D = A[perm_metis, :][:, perm_metis]
-
+    D = A[perm_nd, :][:, perm_nd]
+    logging.info("Matrices permuted successfully!")
     # Initialize plot
+    logging.info("Plotting...")
     fig, axes = plt.subplots(2, 2, figsize=(10, 10))
 
     for ax, M, title in zip(
         axes.flat,
         [A, B, C, D],
-        ["Original", "RCM", "AMD", "METIS"]
+        ["Original", "RCM", "AMD", "ND"]
     ):
-        ax.spy(M, markersize=0.5, rasterized=True)
+        ax.spy(M, markersize=0.1,rasterized=True)
         ax.set_title(title)
 
     plt.tight_layout()
@@ -58,6 +60,8 @@ Returns:
     None
 """
 def speedup_heatmap(df_param: pd.DataFrame, label: str):
+    logging.info(f"Generating speedup heatmap for {label} architecture...")
+    logging.info(f"Reading and pivoting dataframe...")
     df = df_param.copy()
     # Keep the lines with 4 threads
     df = df[df["threads"] == 4]
@@ -68,12 +72,15 @@ def speedup_heatmap(df_param: pd.DataFrame, label: str):
         columns="reordering",
         values="time_ms"
     )
+    logging.info(f"Calculating speedup...")
     # Calculate speedup and drop columns with no reordering
     speedup = time_pivot["none"].values.reshape(-1, 1) / time_pivot
     speedup = speedup.drop(columns=["none"])
 
     # Sort values by rcm reordering
     speedup = speedup.sort_values(by="rcm", ascending=False)
+    logging.info(f"Plotting...")
+
     plt.figure(figsize=(10, 7))
 
     sns.heatmap(
@@ -105,7 +112,10 @@ Returns:
     None
 """
 def arm_x86_comp(df_x86: pd.DataFrame, df_arm: pd.DataFrame):
+    logging.info("Generating ARM vs x86 speedup barchart...")
     # Keep the lines with 4 threads and save avg time / matrix 
+    
+    logging.info("Reading dataframes...")
     df_x86_copy = (
         df_x86[df_x86["threads"] == 4]
         .groupby("matrix", as_index=False)["time_ms"]
@@ -125,10 +135,13 @@ def arm_x86_comp(df_x86: pd.DataFrame, df_arm: pd.DataFrame):
     )
     
     # Calculate speedup
+    logging.info("Calculating speedup comparison...")
     df_merged["speedup"] = df_merged["time_ms_x86"] / df_merged["time_ms_arm"]
 
     # Sort on speedup
     df_merged = df_merged.sort_values("speedup", ascending=False)
+    
+    logging.info("Plotting...")
 
     plt.figure(figsize=(12, 6))
     bars = plt.bar(df_merged["matrix"], df_merged["speedup"], color="royalblue")

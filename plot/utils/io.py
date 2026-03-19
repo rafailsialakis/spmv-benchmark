@@ -43,6 +43,9 @@ def init_plt():
     })
     logging.info("Parameters configured successfully!")
 
+"""
+Initializes logging configuration
+"""
 def init_logging():
     logging.basicConfig(
         level=logging.INFO,

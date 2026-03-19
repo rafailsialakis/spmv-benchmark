@@ -13,6 +13,7 @@ Note:
     In order to run correctly the permutation vectors must be saved/updated for the given matrix
 """
 def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str):
+    logging.info(f"Generating breakeven table for {label} architecture...")
     # Keep lines with 4 threads
     spmv = df_spmv[df_spmv['threads'] == 4].copy()
 
@@ -65,9 +66,9 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     for matrix, row in df_pivot.iterrows():
         rcm   = row.get('rcm',   r'--')
         amd   = row.get('amd',   r'--')
-        metis = row.get('metis', r'--')
+        nd = row.get('nd', r'--')
         mat_tex = matrix.replace('_', r'\_')
-        lines.append(rf'    {mat_tex} & {rcm} & {amd} & {metis} \\')
+        lines.append(rf'    {mat_tex} & {rcm} & {amd} & {nd} \\')
 
     lines.append(r'    \bottomrule')
     lines.append(r'  \end{tabular}')
