@@ -1,6 +1,6 @@
 CC      = gcc
-CFLAGS  = -O3 -Wall -Iinclude -Wunused -D_POSIX_C_SOURCE=200809L -fopenmp -lm
-LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lsuitesparseconfig
+CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp -lm
+LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr
 SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c src/main.c
 BIN = bin/spmv-benchmark
 MATRICES_DIR = matrices
@@ -27,7 +27,7 @@ plot:
 
 clean:
 	rm -f $(BIN) $(RESULTS)/*.csv
-
+	
 help:
 	@echo "Usage:"
 	@echo "  make           		   	Build the benchmark binary"
