@@ -167,7 +167,6 @@ def scaling_table(df_spmv: pd.DataFrame, label: str):
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
-    lines.append(rf'  \caption{{Parallel scaling --- speedup vs 1 thread ({label}).}}')
     lines.append(rf'  \label{{tab:scaling_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{llrrr}')
     lines.append(r'    \toprule')
@@ -239,7 +238,6 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
-    lines.append(rf'  \caption{{Comparison of measurement methodologies ({label}, 4 threads, no reordering). Values in ms.}}')
     lines.append(rf'  \label{{tab:methodology_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{lrrr}')
     lines.append(r'    \toprule')
