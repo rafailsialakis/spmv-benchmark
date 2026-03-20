@@ -4,13 +4,15 @@
 #define    CSR_H
 
 /*
-* Represents the format of a Compressed Sparse Row matrix.
-*
-* Fields:
-*     n (long): The number of rows the matrix has.
-*     cols (long): The number of columns the matrix has.
-*     nnz (long): The number of non-zero elements.
-*/
+ * Represents the format of a Compressed Sparse Row matrix.
+ *
+ * Fields:
+ *     n (int): The number of rows the matrix has
+ *     nnz (int): The number of non-zero elements
+ *     row_ptr (int*): Points to the next non-zero element
+ *     col_idx (int*): Array with column indics
+ *     values (double*): Array with the values  
+ */
 struct CSRMatrix{
     int     n;      
     int     nnz;    
