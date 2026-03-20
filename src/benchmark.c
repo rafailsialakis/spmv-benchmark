@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <float.h>
 #include "../include/csr.h"
 #include "../include/spmv.h"
 #include "../include/timer.h"
