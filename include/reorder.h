@@ -1,9 +1,9 @@
-#include "csr.h"
-#include <stdio.h>
-#include <metis.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <suitesparse/cs.h>
+#include   "csr.h"
+#include   <stdio.h>
+#include   <metis.h>
+#include   <stdlib.h>
+#include   <stdbool.h>
+#include   <suitesparse/cs.h>
 
 #ifndef    REORDER_H
 #define    REORDER_H

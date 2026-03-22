@@ -1,7 +1,7 @@
-#include <time.h>
+#include   <time.h>
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef    TIMER_H
+#define    TIMER_H
 /*
  * Returns the current time as a double in seconds.
  * Uses CLOCK_MONOTONIC which is not affected by system clock changes,

@@ -1,8 +1,8 @@
-#include <math.h>
-#include <stdlib.h>
+#include   <math.h>
+#include   <stdlib.h>
 
-#ifndef METRICS_H
-#define METRICS_H
+#ifndef    METRICS_H
+#define    METRICS_H
 
 /*
  * Result of bandwidth calculation.

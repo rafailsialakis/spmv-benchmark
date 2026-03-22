@@ -32,10 +32,10 @@
  * indexing depending on the internal representation.
  */
 
-#include "coo.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include   "coo.h"
+#include   <stdio.h>
+#include   <stdlib.h>
+#include   <string.h>
 
 #ifndef    PARSER_H   
 #define    PARSER_H

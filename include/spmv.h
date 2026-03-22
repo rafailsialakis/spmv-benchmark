@@ -1,8 +1,8 @@
-#include "csr.h"
-#include <omp.h>
+#include   "csr.h"
+#include   <omp.h>
 
-#ifndef SPMV_H
-#define SPMV_H
+#ifndef    SPMV_H
+#define    SPMV_H
 
 /*
  * Computes y = A * x using CSR format. It runs in parallel using omp static scheduling.
