@@ -144,8 +144,7 @@ struct CSRMatrix* permute_csr(struct CSRMatrix* csr, int* p) {
     // Count nnz per new rows
     for (int i = 0; i < n; i++) {
         int old_row = p[i];
-        new_csr->row_ptr[i+1] = csr->row_ptr[old_row+1]
-                               - csr->row_ptr[old_row];
+        new_csr->row_ptr[i+1] = csr->row_ptr[old_row+1] - csr->row_ptr[old_row];
     }
 
     // Calculate prefix sum
@@ -163,7 +162,6 @@ struct CSRMatrix* permute_csr(struct CSRMatrix* csr, int* p) {
         }
     }
     
-
     free(inv_p);
     return new_csr;
 }
