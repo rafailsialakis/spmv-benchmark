@@ -1,5 +1,6 @@
 CC      = gcc
 CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp -lm
+CFLAGS 	+= -I/usr/include/scotch
 LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr
 SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c src/main.c
 BIN = bin/spmv-benchmark
