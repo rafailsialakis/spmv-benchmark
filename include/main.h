@@ -31,6 +31,20 @@ struct Permutations{
     int*    nd_perm;
 };
 
+/* 
+ * Used in order to ensure that the reordering in SpMxV produces the same results with SpMxV no reordering
+ * More specifically: y' = A' * Px = (PAP^T) * Px = PA * (P^T*Px) = PAx = Py
+ * y = P^-1 * y' = P^T * y'
+ *
+ * Args:
+ *     original (struct CSRMatrix*): A pointer to the original CSR Matrix
+ *     reordered (struct CSRMatrix*): A pointer to the reordered CSR Matrix
+ *     p (int*): The permutation vector applied
+ *     label (const char*): Reordering method label
+ *
+ */
+void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* reordered, int* p, const char* label);
+
 /*
  * Used to export the permutation vector into a .txt file specified by the given path
  *

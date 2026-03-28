@@ -31,6 +31,11 @@ int main(int argc, char* argv[]) {
     struct CSRMatrix* csr_amd   = permute_csr(csr, perm->amd_perm);
     struct CSRMatrix* csr_nd = permute_csr(csr, perm->nd_perm);
 
+    assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
+    assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
+    assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
+    fprintf(stdout, "%s", "All tests passed!");
+
     run_all_benchmarks(csr, csr_rcm, csr_amd, csr_nd, path);
     compute_matrix_metrics(csr, csr_rcm, csr_amd, csr_nd, path);
     cleanup(csr, csr_rcm, csr_amd, csr_nd, perm, path);
@@ -170,4 +175,41 @@ struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* nam
 
     fclose(reorder_csv);
     return p;
+}
+
+void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* reordered, int* p, const char* label) {
+    int n = original->n;
+    double* x      = malloc(n * sizeof(double));
+    double* y_orig  = calloc(n, sizeof(double));
+    double* y_reord = calloc(n, sizeof(double));
+    double* y_back  = calloc(n, sizeof(double));
+    double* px      = malloc(n * sizeof(double));
+
+    for (int i = 0; i < n; i++) x[i] = (double)(i % 7 + 1);
+
+    // y = Ax
+    spmv_csr_seq(original, x, y_orig);
+
+    // x' = Px: new row i παίρνει την τιμή του old row p[i]
+    for (int i = 0; i < n; i++) px[i] = x[p[i]];
+
+    // y' = A'x'
+    spmv_csr_seq(reordered, px, y_reord);
+
+    // y_back[old] = y_reord[new]
+    // new row i αντιστοιχεί σε old row p[i]
+    for (int i = 0; i < n; i++) y_back[p[i]] = y_reord[i];
+
+    double max_err = 0.0;
+    for (int i = 0; i < n; i++) {
+        double err = fabs(y_orig[i] - y_back[i]);
+        if (err > max_err) max_err = err;
+    }
+
+    if (max_err > 1e-10)
+        fprintf(stderr, "CORRECTNESS FAIL [%s]: max_err = %e\n", label, max_err);
+    else
+        printf("Correctness OK [%s]: max_err = %e\n", label, max_err);
+
+    free(x); free(px); free(y_orig); free(y_reord); free(y_back);
 }
