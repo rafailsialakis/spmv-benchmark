@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     }
     setenv("OMP_PROC_BIND", "close", 1);
     setenv("OMP_PLACES",    "cores", 1);
+    omp_set_num_threads(1);
 
     struct CSRMatrix*   csr  = read_matrix(argv[1]);
     struct Path*        path = split_path(argv[1]);
@@ -26,70 +27,12 @@ int main(int argc, char* argv[]) {
     assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
     assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
     assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
-    fprintf(stdout, "%s", "All tests passed!");
 
-    run_all_benchmarks(csr, csr_rcm, csr_amd, csr_nd, path);
-    compute_matrix_metrics(csr, csr_rcm, csr_amd, csr_nd, path);
+    export_permutations(csr, perm);
+    
     cleanup(csr, csr_rcm, csr_amd, csr_nd, perm, path);
 
     return EXIT_SUCCESS;
-}
-
-void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path){
-    FILE* metrics_csv  = open_csv("results/metrics.csv",  "matrix,category,n,nnz,avg_nnz_row,std_nnz_row,bw,rcm_bw,amd_bw,nd_bw,avg_bw,avg_rcm_bw,avg_amd_bw,avg_nd_bw,lb,rcm_lb,amd_lb,nd_lb,density");
-    struct BWResult bw = compute_bandwidth(csr);
-    struct BWResult bw_rcm = compute_bandwidth(csr_rcm);
-    struct BWResult bw_amd = compute_bandwidth(csr_amd);
-    struct BWResult bw_nd = compute_bandwidth(csr_nd);
-
-    double lb = compute_imbalance_ratio(csr,MAX_NUM_THREADS);
-    double lb_rcm = compute_imbalance_ratio(csr_rcm,MAX_NUM_THREADS);
-    double lb_amd = compute_imbalance_ratio(csr_amd,MAX_NUM_THREADS);
-    double lb_nd = compute_imbalance_ratio(csr_nd,MAX_NUM_THREADS);
-
-    double avg_nnz = avg_nnz_row(csr);
-    double std_nnz = std_nnz_row(csr);
-    double density = compute_density(csr);
-
-    fprintf(metrics_csv,"%s,%s,%d,%d,%.2f,%.2f,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%e\n",path->file,path->folder,csr->n,csr->nnz,avg_nnz,std_nnz,bw.max_bw,bw_rcm.max_bw,bw_amd.max_bw, bw_nd.max_bw, bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_nd.avg_bw, lb, lb_rcm, lb_amd, lb_nd, density);    
-    fclose(metrics_csv);
-}
-
-void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path) {
-    double* x = malloc(csr->n * sizeof(double));
-    double* y = malloc(csr->n * sizeof(double));
-    for (int i = 0; i < csr->n; i++) x[i] = 1.0;
-
-    FILE* rax_csv  = open_csv("results/rax.csv",  "matrix,category,reordering,threads,gflops,time_ms");
-    FILE* ios_csv  = open_csv("results/ios.csv",  "matrix,category,reordering,threads,gflops,time_ms");
-    FILE* cold_csv = open_csv("results/cold.csv", "matrix,category,reordering,threads,gflops,time_ms");
-
-    struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_nd};
-    const char* reorderings[4]   = {"none", "rcm", "amd", "nd"};
-    int thread_counts[3]         = {1, 2, 4};
-
-    for (int ti = 0; ti < 3; ti++) {
-        int threads = thread_counts[ti];
-        omp_set_num_threads(threads);
-        BenchResult rax[4], ios[4], cold[4];
-        
-        printf("\nThreads: %d\n", threads);
-        printf("%s\t%s\t%s\t%s\n","Method", "Reorder", "T(ms)", "GFLOP/s");
-        for (int r = 0; r < 4; r++) {
-            rax[r]  = run_benchmark_rax( reorderings[r], matrices[r], x, y);
-            ios[r]  = run_benchmark_ios( reorderings[r], matrices[r], x, y);
-            cold[r] = run_benchmark_cold(reorderings[r], matrices[r], x, y);
-        }
-
-        for (int r = 0; r < 4; r++) {
-            fprintf(rax_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, rax[r].gflops,  rax[r].time_ms);
-            fprintf(ios_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, ios[r].gflops,  ios[r].time_ms);
-            fprintf(cold_csv, "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, cold[r].gflops, cold[r].time_ms);
-        }
-    }
-
-    fclose(rax_csv); fclose(ios_csv); fclose(cold_csv);
-    free(x); free(y);
 }
 
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Permutations* perm, struct Path* path) {
@@ -100,7 +43,6 @@ void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix*
     free((void*)path->file); free((void*)path->folder);
     free(path);
 }
-
 
 struct Path* split_path(char* arg) {
     struct Path* local_path = malloc(sizeof(struct Path));
@@ -201,6 +143,6 @@ void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* re
         fprintf(stderr, "CORRECTNESS FAIL [%s]: max_err = %e\n", label, max_err);
     else
         printf("Correctness OK [%s]: max_err = %e\n", label, max_err);
-
+        
     free(x); free(px); free(y_orig); free(y_reord); free(y_back);
 }
