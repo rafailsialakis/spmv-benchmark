@@ -2,7 +2,7 @@ CC      = gcc
 CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp 
 CFLAGS 	+= -I/usr/include/scotch
 LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lm
-COMMON_SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c
+COMMON_SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c src/utils.c
 MATRICES_DIR = matrices
 RESULTS = results
 
