@@ -14,7 +14,7 @@
  *
  * where:
  *   - <object>   : typically "matrix"
- *   - <format>   : usually "coordinate" (sparse representation)
+ *   - <format>   : usually "coordinate"
  *   - <field>    : data type (e.g., real, integer, complex, pattern)
  *   - <symmetry> : symmetry type (e.g., general, symmetric, skew-symmetric, hermitian)
  *   - <nrows>    : number of matrix rows
