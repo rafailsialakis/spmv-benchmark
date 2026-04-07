@@ -2,9 +2,6 @@ matrix,reordering,time_s
 kkt_power,rcm,1.1373
 kkt_power,amd,2.1899
 kkt_power,nd,18.0047
-com-Amazon,rcm,0.1813
-com-Amazon,amd,0.6865
-com-Amazon,nd,3.6704
 Hook_1498,rcm,2.9501
 Hook_1498,amd,1.9296
 Hook_1498,nd,5.7082

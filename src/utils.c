@@ -67,36 +67,43 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct
 
 void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path){
     int EventSet = PAPI_NULL;
-    long long values[2];
+    long long values[3];
+    int events[3] = {PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L3_TCM};
 
-    int events[2] = {PAPI_L1_DCM, PAPI_L2_DCM};
-
-    // Init
     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
         printf("PAPI init error\n");
         return;
     }
-    // Create EventSet
     PAPI_create_eventset(&EventSet);
+    PAPI_add_events(EventSet, events, 3);
 
-    // Add events
-    PAPI_add_events(EventSet, events, 2);
     double* x = malloc(csr->n * sizeof(double));
     double* y = malloc(csr->n * sizeof(double));
     for (int i = 0; i < csr->n; i++) x[i] = 1.0;
-    //FILE* rax_csv  = open_csv("results/cache.csv","matrix,category,reordering,L3_misses,L2_misses,L1_misses");
-    PAPI_start(EventSet);
 
-    spmv_csr_seq(csr, x, y);
-    PAPI_stop(EventSet, values);
+    FILE* cache_csv = open_csv("results/cache.csv", "matrix,category,reordering,L1_misses,L2_misses,L3_misses");
 
-    printf("L1 misses: %lld\n", values[0]);
-    printf("L2 misses: %lld\n", values[1]);
+    struct CSRMatrix* matrices[4]  = {csr, csr_rcm, csr_amd, csr_nd};
+    const char* reorderings[4]     = {"none", "rcm", "amd", "nd"};
+    
+    printf("\n%-8s%-12s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses", "L3_misses");
+    for (int r = 0; r < 4; r++) {
+        memset(y, 0, csr->n * sizeof(double));
 
-    // Cleanup
+        PAPI_reset(EventSet);
+        PAPI_start(EventSet);
+        spmv_csr_seq(matrices[r], x, y);
+        PAPI_stop(EventSet, values);
+
+        fprintf(cache_csv, "%s,%s,%s,%lld,%lld,%lld\n",
+                path->file, path->folder, reorderings[r],
+                values[0], values[1], values[2]);
+        printf("%-8s%-12lld%-12lld%-12lld\n",reorderings[r], values[0], values[1], values[2]);                    
+    }
     PAPI_cleanup_eventset(EventSet);
     PAPI_destroy_eventset(&EventSet);
-
+    fclose(cache_csv);
+    free(x); free(y);
 }
 
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Permutations* perm, struct Path* path) {
@@ -204,10 +211,9 @@ void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* re
         if (err > max_err) max_err = err;
     }
 
-    if (max_err > 1e-10)
+    if (max_err > 1e-10){
         fprintf(stderr, "CORRECTNESS FAIL [%s]: max_err = %e\n", label, max_err);
-    else
-        printf("Correctness OK [%s]: max_err = %e\n", label, max_err);
-
+        exit(EXIT_FAILURE);
+    }
     free(x); free(px); free(y_orig); free(y_reord); free(y_back);
 }

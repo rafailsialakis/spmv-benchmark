@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
     assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
     assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
-    fprintf(stdout, "%s", "All tests passed!");
+    fprintf(stdout, "%s\n", "All tests passed!");
 
     run_all_benchmarks(csr, csr_rcm, csr_amd, csr_nd, path);
     compute_matrix_metrics(csr, csr_rcm, csr_amd, csr_nd, path);
