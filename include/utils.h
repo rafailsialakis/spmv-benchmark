@@ -1,4 +1,5 @@
 #include   <stdio.h>
+#include   <papi.h>
 
 #ifndef    MAIN_H
 #define    MAIN_H
@@ -139,6 +140,9 @@ void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, st
  *     path (struct Path*): Pointer to the structure containing matrix path information
  */
 void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path);
+
+
+void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path);
 
 /*
  * Frees all dynamically allocated memory used throughout the program.

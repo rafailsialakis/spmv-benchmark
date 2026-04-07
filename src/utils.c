@@ -65,6 +65,40 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct
     free(x); free(y);
 }
 
+void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Path* path){
+    int EventSet = PAPI_NULL;
+    long long values[2];
+
+    int events[2] = {PAPI_L1_DCM, PAPI_L2_DCM};
+
+    // Init
+    if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+        printf("PAPI init error\n");
+        return;
+    }
+    // Create EventSet
+    PAPI_create_eventset(&EventSet);
+
+    // Add events
+    PAPI_add_events(EventSet, events, 2);
+    double* x = malloc(csr->n * sizeof(double));
+    double* y = malloc(csr->n * sizeof(double));
+    for (int i = 0; i < csr->n; i++) x[i] = 1.0;
+    //FILE* rax_csv  = open_csv("results/cache.csv","matrix,category,reordering,L3_misses,L2_misses,L1_misses");
+    PAPI_start(EventSet);
+
+    spmv_csr_seq(csr, x, y);
+    PAPI_stop(EventSet, values);
+
+    printf("L1 misses: %lld\n", values[0]);
+    printf("L2 misses: %lld\n", values[1]);
+
+    // Cleanup
+    PAPI_cleanup_eventset(EventSet);
+    PAPI_destroy_eventset(&EventSet);
+
+}
+
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Permutations* perm, struct Path* path) {
     csr_free(csr); csr_free(csr_rcm);
     csr_free(csr_amd); csr_free(csr_nd);
