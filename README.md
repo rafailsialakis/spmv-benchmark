@@ -51,7 +51,6 @@ To simulate different cache behaviors, the benchmark includes three measurement 
 - **CPU:** ARM Neoverse-N1
 - **Microarchitecture:** Neoverse N1
 - **Cores / Threads:** 4 cores / 4 threads
-- **Base / Boost Frequency:** (not specified by system)
 - **Cache:**
   - L1d: 64 KB per core (256 KB total)
   - L1i: 64 KB per core (256 KB total)
