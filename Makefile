@@ -44,6 +44,11 @@ run-all: $(BIN1)
 		./$(BIN1) $$mtx; \
 	done
 
+run-all-cache: $(BIN3)
+	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
+		./$(BIN3) $$mtx; \
+	done
+
 plot:
 	python3 plot/analysis.py
 
