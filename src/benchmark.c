@@ -8,7 +8,7 @@ double compute_gflops(int nnz, double time_sec) {
 }
 
 void flush_cache() {
-    size_t size = 256 * 1024 * 1024;
+    size_t size = 16 * 1024 * 1024;
     volatile char* buffer = (volatile char*) malloc(size);
     if (!buffer) return;
     for (size_t i = 0; i < size; i += 64)
@@ -33,18 +33,14 @@ static double median(double* arr, int n) {
 }
 
 BenchResult run_benchmark_cold(const char* label, struct CSRMatrix* csr, double* x, double* y) {
-    double times[N_RUNS];
-    for (int i = 0; i < N_RUNS; i++) {
-        flush_cache();
-        double start = get_time();
-        spmv_csr(csr, x, y);
-        double end = get_time();
-        times[i] = end - start;
-    }
-    double t = median(times, N_RUNS);
+    flush_cache();
+    double start = get_time();
+    spmv_csr(csr, x, y);
+    double end = get_time();
+    double time = end - start;
     BenchResult r;
-    r.time_ms = t * 1000.0;
-    r.gflops  = compute_gflops(csr->nnz, t);
+    r.time_ms = time * 1000.0;
+    r.gflops  = compute_gflops(csr->nnz, time);
     printf("%s\t%s\t%.3f\t%.2f\n", "COLD", label, r.time_ms, r.gflops);
     return r;
 }
