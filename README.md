@@ -42,7 +42,6 @@ To simulate different cache behaviors, the benchmark includes three measurement 
   - L3: 6 MB shared
 - **RAM:** 20 GB
 - **Architecture:** x86_64
-- **NUMA:** 1 node
 - **Compiler:** GCC 15.2.1
 - **Compiler Flags:** -O3 -march=native
 - **Operating System:** Manjaro Linux (Kernel 6.12)
@@ -58,7 +57,6 @@ To simulate different cache behaviors, the benchmark includes three measurement 
   - L3: 32 MB shared
 - **RAM:** 16 GB
 - **Architecture:** ARM64 (AArch64)
-- **NUMA:** 1 node
 - **Compiler:** GCC 12.2.0
 - **Compiler Flags:** -O3 -mcpu=native
 - **Operating System:** Debian Linux (Kernel 6.1, cloud ARM64)
