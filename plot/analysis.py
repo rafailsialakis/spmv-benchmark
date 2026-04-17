@@ -3,7 +3,7 @@ from utils import plots
 from utils import tables
 
 def generate_plots(df_rax_x86, df_ios_x86, df_cold_x86, df_rax_arm, df_ios_arm, df_cold_arm):
-    plots.sparse_plot("matrices/Circuit/nv2.mtx")
+    #plots.sparse_plot("matrices/Circuit/nv2.mtx")
     plots.speedup_heatmap(df_rax_x86, "x86")
     plots.speedup_heatmap(df_rax_arm, "ARM") 
     plots.arm_x86_comp(df_cold_x86, df_cold_arm)
