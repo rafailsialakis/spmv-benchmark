@@ -21,8 +21,9 @@ def read_files() -> tuple:
     df_ios_arm = pd.read_csv("arm_results/ios.csv")
     df_rax_arm = pd.read_csv("arm_results/rax.csv")
     df_reorder_arm = pd.read_csv("arm_results/reorder_times.csv")
+    df_cache_x86 = pd.read_csv("results/cache.csv")
     logging.info("DataFrames imported successfully!")
-    return df_metrics, df_cold_x86, df_ios_x86, df_rax_x86, df_reorder_x86,df_cold_arm, df_ios_arm, df_rax_arm, df_reorder_arm
+    return df_metrics, df_cold_x86, df_ios_x86, df_rax_x86, df_reorder_x86,df_cold_arm, df_ios_arm, df_rax_arm, df_reorder_arm, df_cache_x86
 
 """
 Initializes configuration for plt formatting
