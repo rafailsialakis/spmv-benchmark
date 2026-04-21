@@ -59,6 +59,89 @@ Args:
 Returns:
     None
 """
+
+"""
+Produces a faceted bar chart showing L1, L2, L3 cache miss reduction (%)
+vs the original (unreordered) ordering, one subplot per matrix.
+
+Args:
+    df_param (pd.DataFrame): DataFrame with columns:
+        matrix, reordering, L1_misses, L2_misses, L3_misses
+
+Returns:
+    None
+"""
+def cache_plot(df_param: pd.DataFrame) -> None:
+    logging.info("Generating cache miss reduction faceted plot...")
+    df = df_param.copy()
+
+    matrices     = df[df["reordering"] == "none"]["matrix"].tolist()
+    methods      = ["rcm", "amd", "nd"]
+    levels       = ["L1_misses", "L2_misses", "L3_misses"]
+    level_labels = ["L1", "L2", "L3"]
+    level_colors = ["#378ADD", "#1D9E75", "#D85A30"]
+
+    def get_reduction(matrix, method, level):
+        base = df[(df["matrix"] == matrix) & (df["reordering"] == "none")][level].values[0]
+        val  = df[(df["matrix"] == matrix) & (df["reordering"] == method)][level].values[0]
+        return (base - val) / base * 100
+
+    ncols  = 4
+    nrows  = int(np.ceil(len(matrices) / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 3.2, nrows * 2.8))
+    axes = axes.flatten()
+
+    x      = np.arange(len(methods))
+    width  = 0.22
+    offset = [-width, 0, width]
+
+    logging.info("Plotting subplots...")
+    for i, matrix in enumerate(matrices):
+        ax = axes[i]
+        for j, (level, color) in enumerate(zip(levels, level_colors)):
+            reductions = [get_reduction(matrix, m, level) for m in methods]
+            bars = ax.bar(x + offset[j], reductions, width,
+                          color=color, alpha=0.85, zorder=3)
+            for bar, val in zip(bars, reductions):
+                if abs(val) > 1:
+                    ax.text(
+                        bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + (0.5 if val >= 0 else -1.5),
+                        f"{val:.1f}",
+                        ha="center", va="bottom", fontsize=5.5, color="#444"
+                    )
+
+        ax.axhline(0, color="#aaa", linewidth=0.6, zorder=2)
+        ax.set_title(matrix, fontsize=9, fontweight="bold", pad=4)
+        ax.set_xticks(x)
+        ax.set_xticklabels([m.upper() for m in methods], fontsize=8)
+        ax.set_ylabel("Miss reduction (%)", fontsize=7)
+        ax.tick_params(axis="y", labelsize=7)
+        ax.yaxis.grid(True, linewidth=0.4, color="#ddd", zorder=0)
+        ax.set_axisbelow(True)
+        ax.spines[["top", "right"]].set_visible(False)
+
+    for j in range(len(matrices), len(axes)):
+        axes[j].set_visible(False)
+
+    legend_patches = [
+        plt.matplotlib.patches.Patch(color=c, alpha=0.85, label=l)
+        for c, l in zip(level_colors, level_labels)
+    ]
+    fig.legend(handles=legend_patches, loc="lower right",
+               ncol=3, fontsize=9, frameon=False,
+               bbox_to_anchor=(0.98, 0.01))
+
+    fig.suptitle(
+        r"\textbf{Cache miss reduction per reordering method (1 thread)}",
+        fontsize=12, y=1.01
+    )
+
+    plt.tight_layout()
+    plt.savefig("plot/figures/cache_miss_faceted.pdf", bbox_inches="tight", dpi=300)
+    logging.info("Plot was saved successfully in cache_miss_faceted.pdf")
+    plt.show()
+
 def speedup_heatmap(df_param: pd.DataFrame, label: str):
     logging.info(f"Generating speedup heatmap for {label} architecture...")
     logging.info(f"Reading and pivoting dataframe...")
