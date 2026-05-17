@@ -233,7 +233,7 @@ Returns:
 """
 def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.DataFrame, label: str):
 
-    matrices = ['nv2', 'audikw_1', 'Flan_1565', 'thermal2', 'circuit5M']
+    matrices = ['nv2', 'audikw_1', 'Flan_1565', 'thermal2', 'circuit5M', 'crystk01', 's3rmt3m3']
 
     lines = []
     lines.append(r'\begin{table}[htbp]')
@@ -251,7 +251,7 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
                 (df['threads'] == 4) &
                 (df['reordering'] == 'none')
             ]
-            return f"{row['time_ms'].mean():.3f}" if not row.empty else '--'
+            return f"{row['gflops'].mean():.3f}" if not row.empty else '--'
 
         mat_tex = matrix.replace('_', r'\_')
         cold = get_val(df_cold)
