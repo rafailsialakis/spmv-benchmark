@@ -50,23 +50,83 @@ def sparse_plot(path: str) -> None:
     plt.show()
 
 """
-Produces a speedup heatmap that calculates the speedup each reordering method has given 4 threads
+Produced a .pdf that presents a barchart with the matrices that provide 
+a speedup > 1.05, neutral and slowdown < 1. 
 
-Args:
-    df_param (pd.DataFrame):
-    label (str):
+Args: 
+    df_param (pd.DataFrame): Dataframe that contains time_ms in order to calculate speedup
+    label (str): Either ARM or x86 depending on input
 
 Returns:
     None
 """
+def win_loss_summary(df_param: pd.DataFrame, label: str) -> None:
+    logging.info(f"Generating win/loss summary for {label}...")
+    df = df_param.copy()
+    
+    df = df[df["threads"] == 4]
+    
+    methods = ["rcm", "amd", "nd"]
+    matrices = df[df["reordering"] == "none"]["matrix"].unique()
+    
+    results = {"win": [], "neutral": [], "loss": []}
+    
+    for method in methods:
+        wins = 0
+        neutrals = 0
+        losses = 0
+        for matrix in matrices:
+            base = df[(df["matrix"] == matrix) & (df["reordering"] == "none")]["time_ms"].values
+            reord = df[(df["matrix"] == matrix) & (df["reordering"] == method)]["time_ms"].values
+            if len(base) == 0 or len(reord) == 0:
+                continue
+            speedup = base[0] / reord[0]
+            if speedup > 1.05:
+                wins += 1
+            elif speedup < 0.95:
+                losses += 1
+            else:
+                neutrals += 1
+        results["win"].append(wins)
+        results["neutral"].append(neutrals)
+        results["loss"].append(losses)
+
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    
+    x = np.arange(len(methods))
+    width = 0.25
+    bars1 = ax.bar(x - width, results["win"],     width, label="Speedup $> 1.05$",    color="#2E86AB", alpha=0.85)
+    bars2 = ax.bar(x,         results["neutral"], width, label="Neutral ($\\pm5\\%$)", color="#A8A8A8", alpha=0.85)
+    bars3 = ax.bar(x + width, results["loss"],    width, label="Slowdown $< 0.95$",   color="#E84855", alpha=0.85)
+
+    for bars in [bars1, bars2, bars3]:
+        for bar in bars:
+            h = bar.get_height()
+            if h > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.1,
+                        str(int(h)), ha="center", va="bottom", fontsize=8)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([m.upper() for m in methods], fontsize=9)
+    ax.set_ylabel("Number of matrices", fontsize=9)
+    ax.set_title(f"Reordering Win/Loss Summary (4 threads, {label})", fontsize=9, pad=6)
+    ax.legend(fontsize=8, framealpha=0.85)
+    ax.yaxis.grid(True, lw=0.4, ls=":", color="#ccc", zorder=0)
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.set_ylim(0, len(matrices) + 1)
+
+    plt.tight_layout()
+    plt.savefig(f"plot/figures/win_loss_{label}.pdf", bbox_inches="tight", dpi=300)
+    logging.info(f"Saved win_loss_{label}.pdf")
+    plt.show()
 
 """
 Produces a faceted bar chart showing L1, L2, L3 cache miss reduction (%)
 vs the original (unreordered) ordering, one subplot per matrix.
 
 Args:
-    df_param (pd.DataFrame): DataFrame with columns:
-        matrix, reordering, L1_misses, L2_misses, L3_misses
+    df_param (pd.DataFrame): DataFrame with columns: matrix, reordering, L1_misses, L2_misses, L3_misses
 
 Returns:
     None
@@ -115,7 +175,7 @@ def cache_plot(df_param: pd.DataFrame) -> None:
         ax.set_title(matrix, fontsize=9, fontweight="bold", pad=4)
         ax.set_xticks(x)
         ax.set_xticklabels([m.upper() for m in methods], fontsize=8)
-        ax.set_ylabel("Miss reduction (%)", fontsize=7)
+        ax.set_ylabel("Miss reduction (\%)", fontsize=7)
         ax.tick_params(axis="y", labelsize=7)
         ax.yaxis.grid(True, linewidth=0.4, color="#ddd", zorder=0)
         ax.set_axisbelow(True)
@@ -142,6 +202,16 @@ def cache_plot(df_param: pd.DataFrame) -> None:
     logging.info("Plot was saved successfully in cache_miss_faceted.pdf")
     plt.show()
 
+"""
+Produces a speedup heatmap that calculates the speedup each reordering method has given 4 threads
+
+Args:
+    df_param (pd.DataFrame):
+    label (str):
+
+Returns:
+    None
+"""
 def speedup_heatmap(df_param: pd.DataFrame, label: str):
     logging.info(f"Generating speedup heatmap for {label} architecture...")
     logging.info(f"Reading and pivoting dataframe...")
