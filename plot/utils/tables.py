@@ -35,7 +35,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
         gain             = time_none_s - time_reordered_s
 
         if gain <= 0:
-            be = r'\textit{slow}'
+            be = r'\textit{ - }'
         else:
             val = row['time_s'] / gain
             be = r'$>$10000' if val >= 10000 else str(round(val))
@@ -61,7 +61,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     lines.append(rf'  \label{{tab:breakeven_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{lrrr}')
     lines.append(r'    \toprule')
-    lines.append(r'    \textbf{Matrix} & \textbf{RCM} & \textbf{AMD} & \textbf{METIS} \\')
+    lines.append(r'    \textbf{Matrix} & \textbf{AMD} & \textbf{ND} & \textbf{RCM}  \\')
     lines.append(r'    \midrule')
 
     for matrix, row in df_pivot.iterrows():
@@ -69,7 +69,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
         amd   = row.get('amd',   r'--')
         nd = row.get('nd', r'--')
         mat_tex = matrix.replace('_', r'\_')
-        lines.append(rf'    {mat_tex} & {rcm} & {amd} & {nd} \\')
+        lines.append(rf'    {mat_tex} & {amd} & {nd} & {rcm} \\')
 
     lines.append(r'    \bottomrule')
     lines.append(r'  \end{tabular}')
