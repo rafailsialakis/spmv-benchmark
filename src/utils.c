@@ -106,6 +106,70 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, stru
     free(x); free(y);
 }
 
+void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, 
+                        struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, 
+                        struct Path* path) {
+    int EventSet = PAPI_NULL;
+    long long values[3];
+
+    if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
+        printf("PAPI init error\n");
+        return;
+    }
+
+    const char* event_names[3] = {
+        "perf::DTLB-LOAD-MISSES",   // Data TLB load misses
+        "perf::DTLB-STORE-MISSES",  // Data TLB store misses  
+        "perf::ITLB-LOAD-MISSES"    // Instruction TLB load misses
+    };
+
+    PAPI_create_eventset(&EventSet);
+
+    for (int i = 0; i < 3; i++) {
+        int code;
+        if (PAPI_event_name_to_code((char*)event_names[i], &code) != PAPI_OK) {
+            printf("Cannot find event: %s\n", event_names[i]);
+            return;
+        }
+        if (PAPI_add_event(EventSet, code) != PAPI_OK) {
+            printf("Cannot add event: %s\n", event_names[i]);
+            return;
+        }
+    }
+    double* x = malloc(csr->n * sizeof(double));
+    double* y = malloc(csr->n * sizeof(double));
+    for (int i = 0; i < csr->n; i++) x[i] = 1.0;
+
+    FILE* tlb_csv = open_csv("results/tlb.csv",
+        "matrix,category,reordering,DTLB_load_walks,DTLB_store_walks,DTLB_load_stlb_hits");
+
+    struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_nd};
+    const char* reorderings[4]    = {"none", "rcm", "amd", "nd"};
+
+    printf("\n%-8s %-18s %-19s %-18s\n",
+           "Reorder", "DTLB_load_walks", "DTLB_store_walks", "DTLB_stlb_hits");
+
+    for (int r = 0; r < 4; r++) {
+        memset(y, 0, csr->n * sizeof(double));
+
+        PAPI_reset(EventSet);
+        PAPI_start(EventSet);
+        spmv_csr_seq(matrices[r], x, y);
+        PAPI_stop(EventSet, values);
+
+        fprintf(tlb_csv, "%s,%s,%s,%lld,%lld,%lld\n",
+                path->file, path->folder, reorderings[r],
+                values[0], values[1], values[2]);
+        printf("%-8s %-18lld %-19lld %-18lld\n",
+               reorderings[r], values[0], values[1], values[2]);
+    }
+
+    PAPI_cleanup_eventset(EventSet);
+    PAPI_destroy_eventset(&EventSet);
+    fclose(tlb_csv);
+    free(x); free(y);
+}
+
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm, struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd, struct Permutations* perm, struct Path* path) {
     csr_free(csr); csr_free(csr_rcm);
     csr_free(csr_amd); csr_free(csr_nd);
