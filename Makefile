@@ -9,14 +9,16 @@ RESULTS = results
 SRC1 = $(COMMON_SRC) src/main.c
 SRC2 = $(COMMON_SRC) src/main_perm.c
 SRC3 = $(COMMON_SRC) src/main_cache.c
+SRC4 = $(COMMON_SRC) src/main_tlb.c
 
 BIN1 = bin/spmv-benchmark
 BIN2 = bin/spmv-benchmark-perm
 BIN3 = bin/spmv-benchmark-cache
+BIN4 = bin/spmv-benchmark-tlb
 
 .PHONY: plot
 
-all: $(BIN1) $(BIN2) $(BIN3)
+all: $(BIN1) $(BIN2) $(BIN3) $(BIN4)
 
 $(BIN1): $(SRC1)
 	mkdir -p bin results
@@ -30,6 +32,10 @@ $(BIN3): $(SRC3)
 	mkdir -p bin results
 	$(CC) $(CFLAGS) -o $(BIN3) $(SRC3) $(LDFLAGS)
 
+$(BIN4): $(SRC4)
+	mkdir -p bin results
+	$(CC) $(CFLAGS) -o $(BIN4) $(SRC4) $(LDFLAGS)
+
 run: $(BIN1)
 	$(BIN1) $(MTX)
 
@@ -39,6 +45,9 @@ run-perm:
 run-cache:
 	$(BIN3) $(MTX)
 
+run-tlb:
+	$(BIN4) $(MTX)
+
 run-all: $(BIN1)
 	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
 		./$(BIN1) $$mtx; \
@@ -47,6 +56,11 @@ run-all: $(BIN1)
 run-all-cache: $(BIN3)
 	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
 		./$(BIN3) $$mtx; \
+	done
+
+run-all-tlb: $(BIN4)
+	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
+		./$(BIN4) $$mtx; \
 	done
 
 plot:
