@@ -1,6 +1,5 @@
 #include   <stdio.h>
 #include   <float.h>
-#include   <immintrin.h>
 #include   "../include/csr.h"
 
 #ifndef    BENCHMARK_H
