@@ -135,7 +135,9 @@ def cache_plot(df_param: pd.DataFrame) -> None:
     logging.info("Generating cache miss reduction faceted plot...")
     df = df_param.copy()
 
-    matrices     = df[df["reordering"] == "none"]["matrix"].tolist()
+    matrices = sorted(
+        df[df["reordering"] == "none"]["matrix"].unique().tolist()
+    )
     methods      = ["rcm", "amd", "nd"]
     levels       = ["L1_misses", "L2_misses", "L3_misses"]
     level_labels = ["L1", "L2", "L3"]
