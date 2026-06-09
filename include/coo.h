@@ -9,7 +9,7 @@
 * Fields:
 *     rows (long): The number of rows the matrix has.
 *     cols (long): The number of columns the matrix has.
-*     nnz (long): The number of non-zero elements.
+*     nnz (long):  The number of non-zero elements.
 */
 struct Metadata {
     int    rows;

@@ -9,8 +9,8 @@
  *
  * Args:
  *     csr (struct CSRMatrix*): The sparse matrix in CSR format.
- *     x (double*): Input vector of size csr->n.
- *     y (double*): Output vector of size csr->n.
+ *     x (double*):             Input vector of size csr->n.
+ *     y (double*):             Output vector of size csr->n.
  */
 void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y);
 
@@ -19,8 +19,8 @@ void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y);
  *
  * Args:
  *     csr (struct CSRMatrix*): The sparse matrix in CSR format.
- *     x (double*): Input vector of size csr->n.
- *     y (double*): Output vector of size csr->n.
+ *     x (double*):             Input vector of size csr->n.
+ *     y (double*):             Output vector of size csr->n.
  */
 void spmv_csr(struct CSRMatrix* csr, double* x, double* y);
 

@@ -63,7 +63,7 @@ int* compute_permutation_nd(struct CSRMatrix* csr);
  *
  * Args:
  *     csr (struct CSRMatrix*): Input matrix.
- *     p (int*): Permutation vector of size csr->n.
+ *     p (int*):                Permutation vector of size csr->n.
  *
  * Returns:
  *     New permuted CSRMatrisx. 
