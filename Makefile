@@ -1,10 +1,15 @@
 CC      = gcc
-CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp 
+
+CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp -Wno-unused-result
 CFLAGS 	+= -I/usr/include/scotch
+
 LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lm -lpapi
+
 COMMON_SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c src/utils.c
 MATRICES_DIR = matrices
-RESULTS = results
+
+RESULTS1 = x86_results
+RESULTS2 = arm_results
 
 SRC1 = $(COMMON_SRC) src/main.c
 SRC2 = $(COMMON_SRC) src/main_perm.c
@@ -67,13 +72,17 @@ plot:
 	python3 plot/analysis.py
 
 clean:
-	rm -f $(BIN1) $(BIN2) $(RESULTS)/*.csv
+	rm -f $(BIN1) $(BIN2) $(BIN3) $(RESULTS1)/*.csv $(RESULTS2)/*.csv
 	
 help:
 	@echo "Usage:"
 	@echo "  make           		   	Build the benchmark binary"
 	@echo "  make run MTX=matrix.mtx		Run benchmark on a single matrix"
 	@echo "  make run-perm MTX=matrix.mtx		Export permutation vectors"
+	@echo "  make run-cache MTX=matrix.mtx		Run cache measurements on single matrix"
+	@echo "  make run-tlb MTX=matrix.mtx		Run tlb measurements on single matrix"
 	@echo "  make run-all   		   	Run benchmark on all matrices in $(MATRICES_DIR)/"
+	@echo "  make run-all-cache   		   	Run cache measurements on all matrices in $(MATRICES_DIR)/"
+	@echo "  make run-all-tlb   		   	Run tlb measurements on all matrices in $(MATRICES_DIR)/"
 	@echo "  make plot      		   	Run analysis plotting scripts"
 	@echo "  make clean     		   	Remove binaries and results"
