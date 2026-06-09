@@ -12,23 +12,34 @@ Returns:
     df (tuple): A tuple that contains all the DataFrames
 """
 def read_files() -> tuple: 
-    df_metrics = pd.read_csv("results/metrics.csv")
-    df_cold_x86 = pd.read_csv("results/cold.csv")
-    df_ios_x86 = pd.read_csv("results/ios.csv")
-    df_rax_x86 = pd.read_csv("results/rax.csv")
-    df_reorder_x86 = pd.read_csv("results/reorder_times.csv")
-    df_cold_arm = pd.read_csv("arm_results/cold.csv")
-    df_ios_arm = pd.read_csv("arm_results/ios.csv")
-    df_rax_arm = pd.read_csv("arm_results/rax.csv")
+    df_metrics     = pd.read_csv("x86_results/metrics.csv")
+    
+    df_cold_x86    = pd.read_csv("x86_results/cold.csv")
+    df_ios_x86     = pd.read_csv("x86_results/ios.csv")
+    df_rax_x86     = pd.read_csv("x86_results/rax.csv")
+    df_reorder_x86 = pd.read_csv("x86_results/reorder_times.csv")
+    df_cache_x86   = pd.read_csv("x86_results/cache.csv")
+    df_tlb_x86 = pd.read_csv("x86_results/tlb.csv")
+    
+    df_cold_arm    = pd.read_csv("arm_results/cold.csv")
+    df_ios_arm     = pd.read_csv("arm_results/ios.csv")
+    df_rax_arm     = pd.read_csv("arm_results/rax.csv")
     df_reorder_arm = pd.read_csv("arm_results/reorder_times.csv")
-    df_cache_x86 = pd.read_csv("results/cache.csv")
+    df_cache_arm   = pd.read_csv("arm_results/cache.csv")
+    df_tlb_arm = pd.read_csv("arm_results/tlb.csv")
+
     logging.info("DataFrames imported successfully!")
-    return df_metrics, df_cold_x86, df_ios_x86, df_rax_x86, df_reorder_x86,df_cold_arm, df_ios_arm, df_rax_arm, df_reorder_arm, df_cache_x86
+    
+    return (df_metrics,
+            df_cold_x86, df_ios_x86, df_rax_x86, df_reorder_x86,
+            df_cold_arm, df_ios_arm, df_rax_arm, df_reorder_arm,
+            df_cache_x86, df_cache_arm,
+            df_tlb_x86, df_tlb_arm)
 
 """
 Initializes configuration for plt formatting
 """
-def init_plt():
+def init_plt() -> None:
     plt.rcParams.update({
         "text.usetex": True,
         "font.family": "serif",
