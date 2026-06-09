@@ -1,6 +1,5 @@
 .vscode
 matrices/
 bin/
-results/
 validation/
 plot/utils/__pycache__
