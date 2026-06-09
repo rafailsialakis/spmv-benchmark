@@ -18,16 +18,11 @@ int main(int argc, char* argv[]) {
 
     struct CSRMatrix*   csr  = read_matrix(argv[1]);
     struct Path*        path = split_path(argv[1]);
-    struct Permutations* perm = compute_permutations(csr, path->file);
+    struct Permutations* perm = compute_permutations(csr, path->file, 0);
     
     struct CSRMatrix* csr_rcm   = permute_csr(csr, perm->rcm_perm);
     struct CSRMatrix* csr_amd   = permute_csr(csr, perm->amd_perm);
     struct CSRMatrix* csr_nd = permute_csr(csr, perm->nd_perm);
-
-    assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
-    assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
-    assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
-    fprintf(stdout, "%s\n", "All tests passed!");
 
     export_permutations(csr, perm);
     

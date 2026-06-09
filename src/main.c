@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
     struct CSRMatrix*   csr  = read_matrix(argv[1]);
     struct Path*        path = split_path(argv[1]);
-    struct Permutations* perm = compute_permutations(csr, path->file);
+    struct Permutations* perm = compute_permutations(csr, path->file, 1);
     
     struct CSRMatrix* csr_rcm   = permute_csr(csr, perm->rcm_perm);
     struct CSRMatrix* csr_amd   = permute_csr(csr, perm->amd_perm);
