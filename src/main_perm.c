@@ -24,6 +24,11 @@ int main(int argc, char* argv[]) {
     struct CSRMatrix* csr_amd   = permute_csr(csr, perm->amd_perm);
     struct CSRMatrix* csr_nd = permute_csr(csr, perm->nd_perm);
 
+    assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
+    assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
+    assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
+    fprintf(stdout, "%s\n", "All tests passed!");
+
     export_permutations(csr, perm);
     
     cleanup(csr, csr_rcm, csr_amd, csr_nd, perm, path);
