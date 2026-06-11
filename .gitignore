@@ -2,4 +2,8 @@
 matrices/
 bin/
 validation/
+results/*.csv
+plot/*.pdf
+plot/*.tex
+plot/*.png
 plot/utils/__pycache__
