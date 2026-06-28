@@ -1,0 +1,8 @@
+#include "matrix/coo.h"
+
+void coo_free(struct COOMatrix* coo){
+    free(coo->col_idx);
+    free(coo->row_idx);
+    free(coo->values);
+    free(coo);
+}
