@@ -1,15 +1,15 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include "../include/csr.h"
-#include "../include/spmv.h"
-#include "../include/utils.h"
-#include "../include/timer.h"
-#include "../include/parser.h"
-#include "../include/metrics.h"
-#include "../include/reorder.h"
-#include "../include/benchmark.h"
+#include "spmv/spmv.h"
+#include "matrix/csr.h"
+#include "utils/utils.h"
+#include "matrix/parser.h"
+#include "benchmark/timer.h"
+#include "reorder/reorder.h"
+#include "benchmark/metrics.h"
+#include "benchmark/benchmark.h"
 
 void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
