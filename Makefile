@@ -1,70 +1,86 @@
 CC      = gcc
 
 CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp -Wno-unused-result
-CFLAGS 	+= -I/usr/include/scotch
+CFLAGS += -I/usr/include/scotch
 
 LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lm -lpapi
 
-COMMON_SRC = src/parser.c src/coo.c src/csr.c src/spmv.c src/timer.c src/reorder.c src/benchmark.c src/queue.c src/metrics.c src/utils.c
-MATRICES_DIR = matrices
+# Directories
+SRC_DIR = src
 
-RESULTS1 = x86_results
-RESULTS2 = arm_results
+# Source groups
+MATRIX_SRC   = $(SRC_DIR)/matrix/coo.c \
+               $(SRC_DIR)/matrix/csr.c \
+               $(SRC_DIR)/matrix/parser.c
 
-SRC1 = $(COMMON_SRC) src/main.c
-SRC2 = $(COMMON_SRC) src/main_perm.c
-SRC3 = $(COMMON_SRC) src/main_cache.c
-SRC4 = $(COMMON_SRC) src/main_tlb.c
+SPMV_SRC     = $(SRC_DIR)/spmv/spmv.c
+REORDER_SRC  = $(SRC_DIR)/reorder/reorder.c
+UTILS_SRC    = $(SRC_DIR)/utils/utils.c \
+               $(SRC_DIR)/utils/queue.c
 
-BIN1 = bin/spmv-benchmark
-BIN2 = bin/spmv-benchmark-perm
-BIN3 = bin/spmv-benchmark-cache
-BIN4 = bin/spmv-benchmark-tlb
+BENCH_SRC    = $(SRC_DIR)/benchmark/benchmark.c \
+               $(SRC_DIR)/benchmark/metrics.c \
+               $(SRC_DIR)/benchmark/timer.c
 
-.PHONY: plot
+MAIN_SRC     = $(SRC_DIR)/main/main.c
+CACHE_SRC    = $(SRC_DIR)/main/cache_main.c
+PERM_SRC     = $(SRC_DIR)/main/perm_main.c
+TLB_SRC      = $(SRC_DIR)/main/tlb_main.c
+
+COMMON_SRC = $(MATRIX_SRC) $(SPMV_SRC) $(REORDER_SRC) $(UTILS_SRC) $(BENCH_SRC)
+
+# Executables
+BIN_DIR = bin
+
+BIN1 = $(BIN_DIR)/spmv-benchmark
+BIN2 = $(BIN_DIR)/spmv-benchmark-perm
+BIN3 = $(BIN_DIR)/spmv-benchmark-cache
+BIN4 = $(BIN_DIR)/spmv-benchmark-tlb
+
+.PHONY: all clean run run-perm run-cache run-tlb run-all run-all-cache run-all-tlb plot
 
 all: $(BIN1) $(BIN2) $(BIN3) $(BIN4)
 
-$(BIN1): $(SRC1)
-	mkdir -p bin results
-	$(CC) $(CFLAGS) -o $(BIN1) $(SRC1) $(LDFLAGS)
+$(BIN1): $(COMMON_SRC) $(MAIN_SRC)
+	mkdir -p $(BIN_DIR) results
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(BIN2): $(SRC2)
-	mkdir -p bin results
-	$(CC) $(CFLAGS) -o $(BIN2) $(SRC2) $(LDFLAGS)
+$(BIN2): $(COMMON_SRC) $(PERM_SRC)
+	mkdir -p $(BIN_DIR) results
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(BIN3): $(SRC3)
-	mkdir -p bin results
-	$(CC) $(CFLAGS) -o $(BIN3) $(SRC3) $(LDFLAGS)
+$(BIN3): $(COMMON_SRC) $(CACHE_SRC)
+	mkdir -p $(BIN_DIR) results
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(BIN4): $(SRC4)
-	mkdir -p bin results
-	$(CC) $(CFLAGS) -o $(BIN4) $(SRC4) $(LDFLAGS)
+$(BIN4): $(COMMON_SRC) $(TLB_SRC)
+	mkdir -p $(BIN_DIR) results
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 run: $(BIN1)
-	$(BIN1) $(MTX)
+	./$(BIN1) $(MTX)
 
 run-perm:
-	$(BIN2) $(MTX)
+	./$(BIN2) $(MTX)
 
 run-cache:
-	$(BIN3) $(MTX)
+	./$(BIN3) $(MTX)
 
 run-tlb:
-	$(BIN4) $(MTX)
+	./$(BIN4) $(MTX)
 
-run-all: $(BIN1)
-	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
+run-all:
+	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN1) $$mtx; \
 	done
 
-run-all-cache: $(BIN3)
-	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
+run-all-cache:
+	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN3) $$mtx; \
 	done
 
-run-all-tlb: $(BIN4)
-	@for mtx in $(shell find $(MATRICES_DIR) -name "*.mtx" | sed 's|$(MATRICES_DIR)/||'); do \
+run-all-tlb:
+	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN4) $$mtx; \
 	done
 
@@ -72,17 +88,5 @@ plot:
 	python3 plot/analysis.py
 
 clean:
-	rm -f $(BIN1) $(BIN2) $(BIN3) $(RESULTS1)/*.csv $(RESULTS2)/*.csv
-	
-help:
-	@echo "Usage:"
-	@echo "  make           		   	Build the benchmark binary"
-	@echo "  make run MTX=matrix.mtx		Run benchmark on a single matrix"
-	@echo "  make run-perm MTX=matrix.mtx		Export permutation vectors"
-	@echo "  make run-cache MTX=matrix.mtx		Run cache measurements on single matrix"
-	@echo "  make run-tlb MTX=matrix.mtx		Run tlb measurements on single matrix"
-	@echo "  make run-all   		   	Run benchmark on all matrices in $(MATRICES_DIR)/"
-	@echo "  make run-all-cache   		   	Run cache measurements on all matrices in $(MATRICES_DIR)/"
-	@echo "  make run-all-tlb   		   	Run tlb measurements on all matrices in $(MATRICES_DIR)/"
-	@echo "  make plot      		   	Run analysis plotting scripts"
-	@echo "  make clean     		   	Remove binaries and results"
+	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4)
+	rm -f x86_results/*.csv arm_results/*.csv

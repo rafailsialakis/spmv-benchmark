@@ -1,6 +1,7 @@
 .vscode
 matrices/
 bin/
+docs/site
 validation/
 results/*.csv
 plot/*.pdf
