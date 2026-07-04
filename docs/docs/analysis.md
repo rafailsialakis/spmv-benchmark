@@ -137,7 +137,7 @@ call the function directly:
 ```python
 from utils.plotting.sparsity import sparse_plot
 
-sparse_plot("matrices/Circuit/nv2.mtx")
+sparse_plot("matrices/Semiconductor/nv2.mtx")
 ```
 
 The output goes to:

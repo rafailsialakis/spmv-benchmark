@@ -85,6 +85,9 @@ run-all-tlb: $(BIN4)
 		./$(BIN4) $$mtx; \
 	done
 
+download-matrices:
+	scripts/download_matrices.sh
+
 plot:
 	python3 -m scripts.analysis
 

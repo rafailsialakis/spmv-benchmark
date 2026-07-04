@@ -133,8 +133,8 @@ matrices/<category>/<matrix>.mtx
 Example:
 
 ```text
-matrices/FEM/inline_1.mtx
-matrices/Circuit/nv2.mtx
+matrices/Structural/inline_1.mtx
+matrices/Semiconductor/nv2.mtx
 ```
 
 Useful options:
@@ -182,15 +182,15 @@ results/arm_results/
 Pass paths relative to `matrices/`, not full filesystem paths.
 
 ```bash
-make run MTX=FEM/inline_1.mtx
+make run MTX=Structural/inline_1.mtx
 ```
 
 Other single-matrix targets:
 
 ```bash
-make run-cache MTX=FEM/inline_1.mtx
-make run-tlb MTX=FEM/inline_1.mtx
-make run-perm MTX=FEM/inline_1.mtx
+make run-cache MTX=Structural/inline_1.mtx
+make run-tlb MTX=Structural/inline_1.mtx
+make run-perm MTX=Structural/inline_1.mtx
 ```
 
 ## 4. Run All Matrices

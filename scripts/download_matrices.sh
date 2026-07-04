@@ -91,9 +91,10 @@ extract_matrix() {
     local archive="$1"
     local member="$2"
     local target="$3"
-    local partial="${target}.part"
+    local work_dir="$4"
+    local partial="${work_dir}/$(basename -- "${target}").part"
 
-    mkdir -p "$(dirname -- "${target}")"
+    mkdir -p "${work_dir}" "$(dirname -- "${target}")"
     rm -f "${partial}"
 
     if ! tar -xOzf "${archive}" "${member}" > "${partial}"; then
@@ -104,6 +105,7 @@ extract_matrix() {
 
     if [[ ! -s "${partial}" ]]; then
         printf 'Extracted matrix is missing or empty: %s\n' "${partial}" >&2
+        rm -f "${partial}"
         return 1
     fi
 
@@ -162,13 +164,14 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
 
     safe_name="${category}_${output_file%.mtx}"
     archive="${tmp_dir}/${safe_name}.tar.gz"
+    extract_dir="${tmp_dir}/${safe_name}.extract"
 
     printf 'Downloading %s\n' "${url}"
     download "${url}" "${archive}"
 
     member="$(select_member "${archive}" "${output_file}" "${tar_member}")"
     printf 'Extracting %s -> %s\n' "${member}" "${target#${ROOT_DIR}/}"
-    extract_matrix "${archive}" "${member}" "${target}"
+    extract_matrix "${archive}" "${member}" "${target}" "${extract_dir}"
     downloaded=$((downloaded + 1))
 done < "${MANIFEST}"
 

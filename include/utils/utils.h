@@ -21,7 +21,7 @@
  * The matrices folder is not passed in the function, just <field>/<matrix_file>.
  *
  * Fields:
- *     folder (const char*): Specifies the field of the matrix (e.g. FEM, CFD)
+ *     folder (const char*): Specifies the matrix category (e.g. Structural, CFD)
  *     file   (const char*): Specifies the name of the file (e.g. Geo_1438)
  */
 struct Path {
@@ -86,8 +86,8 @@ void export_permutations(struct CSRMatrix* csr, struct Permutations* perm);
 FILE* open_csv(const char* path, const char* header);
 
 /*
- * Splits argv[1] into folder and filename. E.g. "FEM/Geo_1438.mtx" →
- *     folder: "FEM"
+ * Splits argv[1] into folder and filename. E.g. "Geomechanics/Geo_1438.mtx" →
+ *     folder: "Geomechanics"
  *     file:   "Geo_1438"
  *
  * Args:

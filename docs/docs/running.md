@@ -57,18 +57,18 @@ results/arm_results/
 Pass the matrix path relative to `matrices/`:
 
 ```bash
-make run MTX=FEM/inline_1.mtx
+make run MTX=Structural/inline_1.mtx
 ```
 
 Other single-matrix targets:
 
 ```bash
-make run-cache MTX=FEM/inline_1.mtx
-make run-tlb MTX=FEM/inline_1.mtx
-make run-perm MTX=FEM/inline_1.mtx
+make run-cache MTX=Structural/inline_1.mtx
+make run-tlb MTX=Structural/inline_1.mtx
+make run-perm MTX=Structural/inline_1.mtx
 ```
 
-The executable receives `FEM/inline_1.mtx`, not the full `matrices/...` path.
+The executable receives `Structural/inline_1.mtx`, not the full `matrices/...` path.
 The C parser prepends the `matrices/` root internally.
 
 ## Run All Matrices

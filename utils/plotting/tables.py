@@ -9,6 +9,9 @@ def write_table(filename: str, tex: str) -> None:
     with open(TABLES_DIR / filename, 'w') as f:
         f.write(tex)
 
+def tex_escape(value) -> str:
+    return str(value).replace('_', r'\_')
+
 """
 Produces a LaTeX table with break-even iterations needed 
 
@@ -66,6 +69,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
+    lines.append(rf'  \caption{{Break-even SpMV iterations after reordering on {label}. A dash means the reordered SpMV was not faster than the original ordering.}}')
     lines.append(rf'  \label{{tab:breakeven_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{lrrr}')
     lines.append(r'    \toprule')
@@ -76,7 +80,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
         rcm   = row.get('rcm',   r'--')
         amd   = row.get('amd',   r'--')
         nd = row.get('nd', r'--')
-        mat_tex = matrix.replace('_', r'\_')
+        mat_tex = tex_escape(matrix)
         lines.append(rf'    {mat_tex} & {amd} & {nd} & {rcm} \\')
 
     lines.append(r'    \bottomrule')
@@ -117,9 +121,10 @@ def matrix_characteristics_table(df_metrics: pd.DataFrame):
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
+    lines.append(r'  \caption{Structural characteristics of the benchmark matrices.}')
     lines.append(r'  \label{tab:matrix_characteristics}')
     lines.append(r'  \resizebox{\textwidth}{!}{%')
-    lines.append(r'  \begin{tabular}{llrrrrrrrr}')
+    lines.append(r'  \begin{tabular}{llrrrrr}')
     lines.append(r'    \toprule')
     lines.append(r'    ' + ' & '.join([rf'\textbf{{{v}}}' for v in cols.values()]) + r' \\')
     lines.append(r'    \midrule')
@@ -129,7 +134,7 @@ def matrix_characteristics_table(df_metrics: pd.DataFrame):
         if prev_cat and prev_cat != row['category']:
             lines.append(r'    \midrule')
         
-        mat     = row['matrix'].replace('_', r'\_')
+        mat     = tex_escape(row['matrix'])
         cat     = row['category']
         n       = f"{int(row['n']):,}"
         nnz     = f"{int(row['nnz']):,}"
@@ -171,6 +176,7 @@ def scaling_table(df_spmv: pd.DataFrame, label: str):
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
+    lines.append(rf'  \caption{{Thread scaling normalized to the one-thread runtime for each matrix and reordering on {label}.}}')
     lines.append(rf'  \label{{tab:scaling_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{llrrr}')
     lines.append(r'    \toprule')
@@ -201,7 +207,7 @@ def scaling_table(df_spmv: pd.DataFrame, label: str):
                 else:
                     speedups.append(f'{base/row[0]:.2f}')
 
-            mat_tex = matrix.replace('_', r'\_') if first else ''
+            mat_tex = tex_escape(matrix) if first else ''
             reorder_tex = reorder.upper()
             lines.append(
                 rf'    {mat_tex} & {reorder_tex} & {speedups[0]} & {speedups[1]} & {speedups[2]} \\'
@@ -235,11 +241,21 @@ Returns:
 """
 def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.DataFrame, label: str):
 
-    matrices = ['nv2', 'audikw_1', 'Flan_1565', 'thermal2', 'circuit5M', 'crystk01', 's3rmt3m3']
+    preferred = ['nv2', 'audikw_1', 'Flan_1565', 'thermal2', 'circuit5M', 'crystk01', 's3rmt3m3']
+    available = set(df_rax[(df_rax['threads'] == 4) & (df_rax['reordering'] == 'none')]['matrix'])
+    matrices = [matrix for matrix in preferred if matrix in available]
+    if len(matrices) < 7:
+        extras = (
+            df_rax[(df_rax['threads'] == 4) & (df_rax['reordering'] == 'none')]
+            .sort_values('time_ms', ascending=False)['matrix']
+            .tolist()
+        )
+        matrices.extend([matrix for matrix in extras if matrix not in matrices][:7 - len(matrices)])
 
     lines = []
     lines.append(r'\begin{table}[htbp]')
     lines.append(r'  \centering')
+    lines.append(rf'  \caption{{GFLOP/s comparison of measurement methodologies on {label} using the original matrix ordering.}}')
     lines.append(rf'  \label{{tab:methodology_{label.lower()}}}')
     lines.append(r'  \begin{tabular}{lrrr}')
     lines.append(r'    \toprule')
@@ -255,7 +271,7 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
             ]
             return f"{row['gflops'].mean():.3f}" if not row.empty else '--'
 
-        mat_tex = matrix.replace('_', r'\_')
+        mat_tex = tex_escape(matrix)
         cold = get_val(df_cold)
         ios  = get_val(df_ios)
         rax  = get_val(df_rax)
@@ -270,3 +286,134 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
     write_table(f'methodology_table_{label}.tex', tex)
 
     logging.info(f"Table was saved successfully in figures/tables/methodology_table_{label}.tex")
+
+def thesis_aggregate_table(df_spmv: pd.DataFrame, df_cache: pd.DataFrame, df_tlb: pd.DataFrame, label: str):
+    logging.info(f"Generating thesis aggregate table for {label} architecture...")
+    spmv = df_spmv[df_spmv['threads'] == 4].copy()
+    pivot = spmv.pivot_table(
+        index=['matrix', 'category'], columns='reordering', values='time_ms'
+    )
+
+    rows = []
+    for method in ['rcm', 'amd', 'nd']:
+        if method not in pivot.columns or 'none' not in pivot.columns:
+            continue
+        speedup = pivot['none'] / pivot[method]
+        wins = int((speedup > 1.05).sum())
+        neutral = int(((speedup >= 0.95) & (speedup <= 1.05)).sum())
+        losses = int((speedup < 0.95).sum())
+
+        cache_l2 = '--'
+        if df_cache is not None and 'L2_misses' in df_cache.columns:
+            cache_pivot = df_cache.pivot_table(
+                index='matrix', columns='reordering', values='L2_misses'
+            )
+            if method in cache_pivot.columns and 'none' in cache_pivot.columns:
+                base = cache_pivot['none'].replace(0, pd.NA)
+                cache_l2 = f"{((base - cache_pivot[method]) / base * 100).median():.1f}"
+
+        dtlb_ratio = '--'
+        if df_tlb is not None and 'dtlb_load_misses' in df_tlb.columns:
+            tlb_pivot = df_tlb.pivot_table(
+                index='matrix', columns='reordering', values='dtlb_load_misses'
+            )
+            if method in tlb_pivot.columns and 'none' in tlb_pivot.columns:
+                base = tlb_pivot['none'].replace(0, pd.NA)
+                dtlb_ratio = f"{(tlb_pivot[method] / base).median():.2f}"
+
+        rows.append({
+            'method': method.upper(),
+            'median_speedup': f"{speedup.median():.2f}",
+            'best_speedup': f"{speedup.max():.2f}",
+            'wins': wins,
+            'neutral': neutral,
+            'losses': losses,
+            'median_l2': cache_l2,
+            'median_dtlb_ratio': dtlb_ratio,
+        })
+
+    lines = []
+    lines.append(r'\begin{table}[htbp]')
+    lines.append(r'  \centering')
+    lines.append(rf'  \caption{{Aggregate reordering outcomes on {label}. Wins and losses use a $\pm5\%$ neutral band.}}')
+    lines.append(rf'  \label{{tab:thesis_aggregate_{label.lower()}}}')
+    lines.append(r'  \begin{tabular}{lrrrrrrr}')
+    lines.append(r'    \toprule')
+    lines.append(r'    \textbf{Method} & \textbf{Median speedup} & \textbf{Best speedup} & \textbf{Wins} & \textbf{Neutral} & \textbf{Losses} & \textbf{Median L2 red. (\%)} & \textbf{Median DTLB ratio} \\')
+    lines.append(r'    \midrule')
+    for row in rows:
+        lines.append(
+            rf"    {row['method']} & {row['median_speedup']} & {row['best_speedup']} & {row['wins']} & {row['neutral']} & {row['losses']} & {row['median_l2']} & {row['median_dtlb_ratio']} \\"
+        )
+    lines.append(r'    \bottomrule')
+    lines.append(r'  \end{tabular}')
+    lines.append(r'\end{table}')
+
+    write_table(f'thesis_aggregate_table_{label}.tex', '\n'.join(lines))
+    logging.info(f"Table was saved successfully in figures/tables/thesis_aggregate_table_{label}.tex")
+
+def thesis_best_reordering_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str):
+    logging.info(f"Generating thesis best-reordering table for {label} architecture...")
+    spmv = df_spmv[df_spmv['threads'] == 4].copy()
+    pivot = spmv.pivot_table(
+        index=['matrix', 'category'], columns='reordering', values='time_ms'
+    )
+
+    rows = []
+    for matrix, category in pivot.index:
+        if 'none' not in pivot.columns:
+            continue
+        speedups = {
+            method: pivot.loc[(matrix, category), 'none'] / pivot.loc[(matrix, category), method]
+            for method in ['rcm', 'amd', 'nd']
+            if method in pivot.columns
+        }
+        if not speedups:
+            continue
+        best_method = max(speedups, key=speedups.get)
+        best_speedup = speedups[best_method]
+        base_ms = pivot.loc[(matrix, category), 'none']
+        best_ms = pivot.loc[(matrix, category), best_method]
+        gain_s = (base_ms - best_ms) / 1000
+        reorder_row = df_reorder[
+            (df_reorder['matrix'] == matrix) &
+            (df_reorder['reordering'] == best_method)
+        ]
+        if gain_s <= 0 or reorder_row.empty:
+            breakeven = r'--'
+        else:
+            val = reorder_row['time_s'].iloc[0] / gain_s
+            breakeven = r'$>$10000' if val >= 10000 else f"{round(val)}"
+        rows.append({
+            'matrix': matrix,
+            'category': category,
+            'best_method': best_method.upper(),
+            'best_speedup': best_speedup,
+            'rcm': speedups.get('rcm'),
+            'amd': speedups.get('amd'),
+            'nd': speedups.get('nd'),
+            'breakeven': breakeven,
+        })
+
+    rows = sorted(rows, key=lambda row: row['best_speedup'], reverse=True)
+
+    lines = []
+    lines.append(r'\begin{table}[htbp]')
+    lines.append(r'  \centering')
+    lines.append(rf'  \caption{{Best observed reordering per matrix on {label}. Break-even is reported only when the best reordered SpMV is faster than the original ordering.}}')
+    lines.append(rf'  \label{{tab:thesis_best_reordering_{label.lower()}}}')
+    lines.append(r'  \resizebox{\textwidth}{!}{%')
+    lines.append(r'  \begin{tabular}{lllrrrrr}')
+    lines.append(r'    \toprule')
+    lines.append(r'    \textbf{Matrix} & \textbf{Category} & \textbf{Best} & \textbf{Best speedup} & \textbf{RCM} & \textbf{AMD} & \textbf{ND} & \textbf{Break-even} \\')
+    lines.append(r'    \midrule')
+    for row in rows:
+        lines.append(
+            rf"    {tex_escape(row['matrix'])} & {row['category']} & {row['best_method']} & {row['best_speedup']:.2f} & {row['rcm']:.2f} & {row['amd']:.2f} & {row['nd']:.2f} & {row['breakeven']} \\"
+        )
+    lines.append(r'    \bottomrule')
+    lines.append(r'  \end{tabular}}')
+    lines.append(r'\end{table}')
+
+    write_table(f'thesis_best_reordering_table_{label}.tex', '\n'.join(lines))
+    logging.info(f"Table was saved successfully in figures/tables/thesis_best_reordering_table_{label}.tex")

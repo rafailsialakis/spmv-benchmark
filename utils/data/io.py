@@ -2,6 +2,12 @@ import logging
 import os
 from pathlib import Path
 import pandas as pd
+
+if "MPLCONFIGDIR" not in os.environ:
+    mpl_config_dir = Path("/tmp/spmv-benchmark-mplconfig")
+    mpl_config_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["MPLCONFIGDIR"] = str(mpl_config_dir)
+
 import matplotlib.pyplot as plt
 from pandas.errors import EmptyDataError, ParserError
 
