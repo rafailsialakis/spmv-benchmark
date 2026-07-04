@@ -1,1 +1,16 @@
-site_name: My Docs
+site_name: SpMV Benchmark
+site_description: Documentation for the sparse matrix-vector multiplication benchmark.
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Project Structure: structure.md
+  - Matrices: matrices.md
+  - Running Benchmarks: running.md
+  - Analysis Outputs: analysis.md
