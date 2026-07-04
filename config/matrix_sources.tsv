@@ -21,3 +21,4 @@ Circuit	G3_circuit.mtx	https://sparse.tamu.edu/MM/AMD/G3_circuit.tar.gz
 Circuit	dgreen.mtx	https://sparse.tamu.edu/MM/VLSI/dgreen.tar.gz
 Circuit	circuit5M.mtx	https://sparse.tamu.edu/MM/Freescale/circuit5M.tar.gz
 Circuit	ASIC_680k.mtx	https://sparse.tamu.edu/MM/Sandia/ASIC_680k.tar.gz
+Circuit	stokes.mtx	https://sparse.tamu.edu/MM/VLSI/stokes.tar.gz
