@@ -31,6 +31,7 @@ COMMON_SRC = $(MATRIX_SRC) $(SPMV_SRC) $(REORDER_SRC) $(UTILS_SRC) $(BENCH_SRC)
 
 # Executables
 BIN_DIR = bin
+RESULT_DIRS = results/x86_results results/arm_results
 
 BIN1 = $(BIN_DIR)/spmv-benchmark
 BIN2 = $(BIN_DIR)/spmv-benchmark-perm
@@ -42,51 +43,51 @@ BIN4 = $(BIN_DIR)/spmv-benchmark-tlb
 all: $(BIN1) $(BIN2) $(BIN3) $(BIN4)
 
 $(BIN1): $(COMMON_SRC) $(MAIN_SRC)
-	mkdir -p $(BIN_DIR) results
+	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(BIN2): $(COMMON_SRC) $(PERM_SRC)
-	mkdir -p $(BIN_DIR) results
+	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(BIN3): $(COMMON_SRC) $(CACHE_SRC)
-	mkdir -p $(BIN_DIR) results
+	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(BIN4): $(COMMON_SRC) $(TLB_SRC)
-	mkdir -p $(BIN_DIR) results
+	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 run: $(BIN1)
 	./$(BIN1) $(MTX)
 
-run-perm:
+run-perm: $(BIN2)
 	./$(BIN2) $(MTX)
 
-run-cache:
+run-cache: $(BIN3)
 	./$(BIN3) $(MTX)
 
-run-tlb:
+run-tlb: $(BIN4)
 	./$(BIN4) $(MTX)
 
-run-all:
+run-all: $(BIN1)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN1) $$mtx; \
 	done
 
-run-all-cache:
+run-all-cache: $(BIN3)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN3) $$mtx; \
 	done
 
-run-all-tlb:
+run-all-tlb: $(BIN4)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
 		./$(BIN4) $$mtx; \
 	done
 
 plot:
-	python3 plot/analysis.py
+	python3 scripts/analysis.py
 
 clean:
 	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4)
-	rm -f x86_results/*.csv arm_results/*.csv
+	rm -f results/x86_results/*.csv results/arm_results/*.csv
