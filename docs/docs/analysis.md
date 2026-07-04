@@ -11,8 +11,11 @@ make plot
 or directly:
 
 ```bash
-python3 scripts/analysis.py
+python3 -m scripts.analysis
 ```
+
+The module form is intentional: it keeps imports rooted at the project package
+layout without modifying `sys.path` inside the script.
 
 ## Data Loading
 
@@ -36,6 +39,11 @@ Both platform result directories must contain the CSVs needed by the analysis.
     `results/x86_results/` and `results/arm_results/` to be populated with
     compatible matrix sets. If one platform is missing a matrix, the merge step
     may drop it from cross-platform comparisons.
+
+!!! note "Missing platform data"
+    The analysis pipeline tolerates missing CSVs. If ARM results are not present
+    yet, x86 plots and tables are still generated while ARM-specific and
+    cross-platform outputs are skipped with warnings.
 
 ## Plot Modules
 

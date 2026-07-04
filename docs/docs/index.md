@@ -40,6 +40,12 @@ make run-all-cache
 make plot
 ```
 
+`make plot` runs the analysis as a module:
+
+```bash
+python3 -m scripts.analysis
+```
+
 The shortcut script runs the benchmark and plotting pipeline:
 
 ```bash

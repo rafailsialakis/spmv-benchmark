@@ -86,7 +86,7 @@ run-all-tlb: $(BIN4)
 	done
 
 plot:
-	python3 scripts/analysis.py
+	python3 -m scripts.analysis
 
 clean:
 	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4)
