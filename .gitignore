@@ -4,6 +4,10 @@ bin/
 docs/site
 validation/
 results/*.csv
+results/x86_results/
+results/arm_results/
+x86_results/
+arm_results/
 plot/*.pdf
 plot/*.tex
 plot/*.png
