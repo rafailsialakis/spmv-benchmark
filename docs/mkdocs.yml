@@ -1,11 +1,9 @@
-site_name: SpMV Benchmark
+site_name: SpMxV Benchmark
 site_description: Documentation for the sparse matrix-vector multiplication benchmark.
 repo_name: spmv-benchmark
 
 theme:
   name: material
-  logo: assets/figures/memory_hierarchy.png
-  favicon: assets/figures/memory_hierarchy.png
   features:
     - navigation.tabs
     - navigation.tabs.sticky
@@ -18,15 +16,6 @@ theme:
     - search.highlight
     - search.suggest
   palette:
-    - scheme: default
-      primary: blue grey
-      accent: deep orange
-      toggle:
-        icon: material/weather-night
-        name: Switch to dark mode
-    - scheme: slate
-      primary: blue grey
-      accent: deep orange
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
