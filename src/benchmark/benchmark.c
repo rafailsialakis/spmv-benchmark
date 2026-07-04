@@ -35,7 +35,7 @@ static double median(double* arr, int n) {
 BenchResult run_benchmark_cold(const char* label, struct CSRMatrix* csr, double* x, double* y) {
     flush_cache();
     double start = get_time();
-    spmv_csr(csr, x, y);
+    spmv_csr_parallel(csr, x, y);
     double end = get_time();
     double time = end - start;
     BenchResult r;
@@ -49,10 +49,10 @@ BenchResult run_benchmark_rax(const char* label, struct CSRMatrix* csr,
                                double* x, double* y) {
     double times[N_RUNS];
     for (int i = 0; i < WARMUP_RUNS; i++)
-        spmv_csr(csr, x, y);
+        spmv_csr_parallel(csr, x, y);
     for (int i = 0; i < N_RUNS; i++) {
         double start = get_time();
-        spmv_csr(csr, x, y);
+        spmv_csr_parallel(csr, x, y);
         double end = get_time();
         times[i] = end - start;
     }
@@ -70,7 +70,7 @@ BenchResult run_benchmark_ios(const char* label, struct CSRMatrix* csr, double* 
 
     for (int i = 0; i < N_RUNS; i++) {
         double start = get_time();
-        spmv_csr(csr, in, out);
+        spmv_csr_parallel(csr, in, out);
         double end = get_time();
         times[i] = end - start;
         double *tmp = in; in = out; out = tmp;

@@ -1,7 +1,7 @@
 #include "spmv/spmv.h"
 #include "matrix/csr.h"
 
-void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y) {
+void spmv_csr(struct CSRMatrix* csr, double* x, double* y) {
     for (int i = 0; i < csr->n; i++) {
         double sum = 0.0;
         for (int j = csr->row_ptr[i]; j < csr->row_ptr[i+1]; j++) {
@@ -11,7 +11,7 @@ void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y) {
      }
 }
 
-void spmv_csr(struct CSRMatrix* csr, double* x, double* y) {
+void spmv_csr_parallel(struct CSRMatrix* csr, double* x, double* y) {
     // Parallel for over rows
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < csr->n; i++) {

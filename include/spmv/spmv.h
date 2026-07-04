@@ -12,7 +12,7 @@
  *     x (double*):             Input vector of size csr->n.
  *     y (double*):             Output vector of size csr->n.
  */
-void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y);
+void spmv_csr(struct CSRMatrix* csr, double* x, double* y);
 
 /*
  * Computes y = A * x using CSR format. It runs in parallel using omp static scheduling.
@@ -22,6 +22,6 @@ void spmv_csr_seq(struct CSRMatrix* csr, double* x, double* y);
  *     x (double*):             Input vector of size csr->n.
  *     y (double*):             Output vector of size csr->n.
  */
-void spmv_csr(struct CSRMatrix* csr, double* x, double* y);
+void spmv_csr_parallel(struct CSRMatrix* csr, double* x, double* y);
 
 #endif

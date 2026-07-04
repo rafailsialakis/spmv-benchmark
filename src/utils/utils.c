@@ -146,7 +146,7 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
         memset(y, 0, csr->n * sizeof(double));
         PAPI_reset(EventSet);
         PAPI_start(EventSet);
-        spmv_csr_seq(matrices[r], x, y);
+        spmv_csr(matrices[r], x, y);
         PAPI_stop(EventSet, values);
 
 #if defined(__aarch64__)
@@ -217,7 +217,7 @@ void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
         PAPI_reset(EventSet);
         PAPI_start(EventSet);
-        spmv_csr_seq(matrices[r], x, y);
+        spmv_csr(matrices[r], x, y);
         PAPI_stop(EventSet, values);
 
         fprintf(tlb_csv, "%s,%s,%s,%lld,%lld\n",
@@ -326,9 +326,9 @@ void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* re
 
     for (int i = 0; i < n; i++) x[i] = (double)(i % 7 + 1);
 
-    spmv_csr_seq(original, x, y_orig);              // y = Ax
+    spmv_csr(original, x, y_orig);              // y = Ax
     for (int i = 0; i < n; i++) px[i] = x[p[i]];   // x' = Px
-    spmv_csr_seq(reordered, px, y_reord);            // y' = A'x'
+    spmv_csr(reordered, px, y_reord);            // y' = A'x'
     for (int i = 0; i < n; i++) y_back[p[i]] = y_reord[i]; // y_back = P^T y'
 
     double max_err = 0.0;
