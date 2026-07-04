@@ -1,25 +1,31 @@
 # SpMV Benchmark
 
-This project benchmarks Sparse Matrix-Vector Multiplication (SpMV) on SuiteSparse
-matrices. It evaluates how matrix reorderings affect execution time, cache/TLB
-behavior, load balance, and structural matrix metrics.
+This project benchmarks Sparse Matrix-Vector Multiplication (SpMV) on
+SuiteSparse matrices. It evaluates how graph/ordering structure affects the
+memory behavior and end-to-end performance of the SpMV kernel.
 
 The benchmark core is written in C. Python is used only for reading result CSVs
 and generating figures/tables.
 
-## What It Measures
+![Memory hierarchy](assets/figures/memory_hierarchy.png)
 
-- SpMV performance with different measurement methodologies:
-  - repeated `A * x`
-  - input/output vector swapping
-  - cold-cache style measurement
-- Reordering impact for:
-  - Reverse Cuthill-McKee
-  - Approximate Minimum Degree
-  - Nested Dissection
-- Reordering cost.
-- Matrix structure metrics.
-- Cache and TLB behavior through PAPI counters.
+## Goals
+
+The benchmark is built around a practical question: when does paying the cost of
+matrix reordering improve SpMV enough to matter?
+
+It records:
+
+- SpMV runtime and GFLOP/s across measurement methodologies.
+- Reordering cost for RCM, AMD, and ND.
+- Structural matrix metrics such as bandwidth, density, and load imbalance.
+- Cache and TLB counter behavior through PAPI.
+- Cross-platform behavior on x86 and ARM systems.
+
+!!! note "Why this is memory-focused"
+    SpMV usually performs little arithmetic per byte moved. Performance is often
+    limited by sparse access patterns, cache reuse, TLB behavior, and memory
+    bandwidth rather than floating-point throughput.
 
 ## Main Workflow
 
@@ -40,15 +46,19 @@ The shortcut script runs the benchmark and plotting pipeline:
 scripts/run_all.sh
 ```
 
-## Output Locations
+## Output Map
 
-- Benchmark CSVs: `results/x86_results/` or `results/arm_results/`
-- Figures:
-  - `figures/heatmaps/`
-  - `figures/barcharts/`
-  - `figures/faceted/`
-  - `figures/sparsity/`
-- LaTeX tables: `figures/tables/`
+| Artifact | Location |
+| --- | --- |
+| Download manifest | `config/matrix_sources.tsv` |
+| Matrix files | `matrices/<category>/<matrix>.mtx` |
+| x86 CSVs | `results/x86_results/` |
+| ARM CSVs | `results/arm_results/` |
+| Heatmaps | `figures/heatmaps/` |
+| Bar charts | `figures/barcharts/` |
+| Faceted cache/TLB plots | `figures/faceted/` |
+| Sparsity plots | `figures/sparsity/` |
+| LaTeX tables | `figures/tables/` |
 
 ## Documentation
 
@@ -62,4 +72,10 @@ Build the static docs site with:
 
 ```bash
 mkdocs build -f docs/mkdocs.yml
+```
+
+The documentation uses MkDocs Material. Install the docs dependency with:
+
+```bash
+pip install -r docs/requirements.txt
 ```

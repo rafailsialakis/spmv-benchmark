@@ -2,6 +2,11 @@
 
 Run commands from the project root.
 
+!!! tip "Recommended order"
+    Download matrices first, build all binaries, run the timing benchmarks,
+    then run TLB/cache measurements. Cache and TLB runs use PAPI and are more
+    sensitive to platform permissions and counter availability.
+
 ## Dependencies
 
 The C benchmark expects:
@@ -63,6 +68,9 @@ make run-tlb MTX=FEM/inline_1.mtx
 make run-perm MTX=FEM/inline_1.mtx
 ```
 
+The executable receives `FEM/inline_1.mtx`, not the full `matrices/...` path.
+The C parser prepends the `matrices/` root internally.
+
 ## Run All Matrices
 
 The all-matrix targets discover every `.mtx` under `matrices/`:
@@ -78,6 +86,29 @@ The full helper script runs all benchmark stages and then analysis:
 ```bash
 scripts/run_all.sh
 ```
+
+## Benchmark Stages
+
+| Stage | Make target | Output |
+| --- | --- | --- |
+| Main timings and metrics | `make run-all` | `metrics.csv`, `reorder_times.csv`, `rax.csv`, `ios.csv`, `cold.csv` |
+| TLB counters | `make run-all-tlb` | `tlb.csv` |
+| Cache counters | `make run-all-cache` | `cache.csv` |
+| Plots and tables | `make plot` | `figures/` |
+
+## PAPI Notes
+
+Cache and TLB runs use PAPI events. Availability depends on hardware, kernel
+configuration, and permissions.
+
+Common failure modes:
+
+- PAPI cannot resolve the requested TLB events.
+- The user does not have permission to access hardware counters.
+- ARM and x86 expose different cache event sets.
+
+The code already uses architecture-specific cache event columns: x86 writes L1,
+L2, and L3 counters; ARM writes L1 and L2 counters.
 
 ## Result Files
 

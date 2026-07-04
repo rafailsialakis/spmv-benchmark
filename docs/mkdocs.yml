@@ -1,16 +1,59 @@
 site_name: SpMV Benchmark
 site_description: Documentation for the sparse matrix-vector multiplication benchmark.
+repo_name: spmv-benchmark
 
 theme:
   name: material
+  logo: assets/figures/memory_hierarchy.png
+  favicon: assets/figures/memory_hierarchy.png
   features:
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.expand
+    - navigation.path
     - navigation.top
     - content.code.copy
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: blue grey
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+plugins:
+  - search
 
 nav:
-  - Home: index.md
-  - Project Structure: structure.md
-  - Matrices: matrices.md
-  - Running Benchmarks: running.md
-  - Analysis Outputs: analysis.md
+  - Overview:
+      - Home: index.md
+      - Project Structure: structure.md
+  - Benchmark:
+      - Methodology: methodology.md
+      - Platforms: platforms.md
+      - Matrices: matrices.md
+      - Running Benchmarks: running.md
+  - Analysis:
+      - Analysis Pipeline: analysis.md
+      - Result Figures: results.md
