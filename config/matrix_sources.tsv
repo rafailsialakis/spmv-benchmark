@@ -1,0 +1,23 @@
+# category	output_file	url	tar_member
+FEM	inline_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/inline_1.tar.gz
+FEM	Flan_1565.mtx	https://sparse.tamu.edu/MM/Janna/Flan_1565.tar.gz
+FEM	Hook_1498.mtx	https://sparse.tamu.edu/MM/Janna/Hook_1498.tar.gz
+FEM	audikw_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/audikw_1.tar.gz
+FEM	F1.mtx	https://sparse.tamu.edu/MM/Koutsovasilis/F1.tar.gz
+FEM	consph.mtx	https://sparse.tamu.edu/MM/Williams/consph.tar.gz
+FEM	ldoor.mtx	https://sparse.tamu.edu/MM/GHS_psdef/ldoor.tar.gz
+FEM	pwtk.mtx	https://sparse.tamu.edu/MM/Boeing/pwtk.tar.gz
+FEM	bmw7st_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/bmw7st_1.tar.gz
+CFD	thermal2.mtx	https://sparse.tamu.edu/MM/Schmid/thermal2.tar.gz
+CFD	atmosmodd.mtx	https://sparse.tamu.edu/MM/Bourchtein/atmosmodd.tar.gz
+CFD	rma10.mtx	https://sparse.tamu.edu/MM/Bova/rma10.tar.gz
+Optimization	kkt_power.mtx	https://sparse.tamu.edu/MM/Zaoui/kkt_power.tar.gz
+Optimization	nlpkkt120.mtx	https://sparse.tamu.edu/MM/Schenk/nlpkkt120.tar.gz
+Optimization	mip1.mtx	https://sparse.tamu.edu/MM/Andrianov/mip1.tar.gz
+Optimization	largebasis.mtx	https://sparse.tamu.edu/MM/QLi/largebasis.tar.gz
+Optimization	gupta2.mtx	https://sparse.tamu.edu/MM/Gupta/gupta2.tar.gz
+Circuit	nv2.mtx	https://sparse.tamu.edu/MM/VLSI/nv2.tar.gz
+Circuit	G3_circuit.mtx	https://sparse.tamu.edu/MM/AMD/G3_circuit.tar.gz
+Circuit	dgreen.mtx	https://sparse.tamu.edu/MM/VLSI/dgreen.tar.gz
+Circuit	circuit5M.mtx	https://sparse.tamu.edu/MM/Freescale/circuit5M.tar.gz
+Circuit	ASIC_680k.mtx	https://sparse.tamu.edu/MM/Sandia/ASIC_680k.tar.gz
