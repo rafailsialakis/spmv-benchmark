@@ -7,6 +7,7 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 DEFAULT_MANIFEST="${ROOT_DIR}/config/matrix_sources.tsv"
 MANIFEST="${1:-${DEFAULT_MANIFEST}}"
 MATRIX_ROOT="${MATRIX_ROOT:-${ROOT_DIR}/matrices}"
+DOWNLOAD_TMP_ROOT="${DOWNLOAD_TMP_ROOT:-${MATRIX_ROOT}/.download_tmp}"
 FORCE="${FORCE:-0}"
 
 usage() {
@@ -20,6 +21,7 @@ Blank lines and lines beginning with # are ignored.
 
 Environment:
   MATRIX_ROOT=/path/to/matrices   output root, default: ${MATRIX_ROOT}
+  DOWNLOAD_TMP_ROOT=/path         temporary download root, default: ${DOWNLOAD_TMP_ROOT}
   FORCE=1                         overwrite existing .mtx files
 USAGE
 }
@@ -89,28 +91,33 @@ extract_matrix() {
     local archive="$1"
     local member="$2"
     local target="$3"
-    local work_dir="$4"
-    local extracted="${work_dir}/${member}"
     local partial="${target}.part"
 
-    mkdir -p "$(dirname -- "${extracted}")" "$(dirname -- "${target}")"
-    tar -xzf "${archive}" -C "${work_dir}" "${member}"
+    mkdir -p "$(dirname -- "${target}")"
+    rm -f "${partial}"
 
-    if [[ ! -s "${extracted}" ]]; then
-        printf 'Extracted matrix is missing or empty: %s\n' "${extracted}" >&2
+    if ! tar -xOzf "${archive}" "${member}" > "${partial}"; then
+        rm -f "${partial}"
+        printf 'Failed to extract %s from %s\n' "${member}" "${archive}" >&2
         return 1
     fi
 
-    if ! head -n 1 "${extracted}" | grep -q '^%%MatrixMarket'; then
-        printf 'Extracted file does not look like Matrix Market: %s\n' "${extracted}" >&2
+    if [[ ! -s "${partial}" ]]; then
+        printf 'Extracted matrix is missing or empty: %s\n' "${partial}" >&2
         return 1
     fi
 
-    cp "${extracted}" "${partial}"
+    if ! head -n 1 "${partial}" | grep -q '^%%MatrixMarket'; then
+        printf 'Extracted file does not look like Matrix Market: %s\n' "${partial}" >&2
+        rm -f "${partial}"
+        return 1
+    fi
+
     mv "${partial}" "${target}"
 }
 
-tmp_dir="$(mktemp -d)"
+mkdir -p "${DOWNLOAD_TMP_ROOT}"
+tmp_dir="$(mktemp -d "${DOWNLOAD_TMP_ROOT%/}/download.XXXXXX")"
 trap 'rm -rf "${tmp_dir}"' EXIT
 
 line_no=0
@@ -155,14 +162,13 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
 
     safe_name="${category}_${output_file%.mtx}"
     archive="${tmp_dir}/${safe_name}.tar.gz"
-    extract_dir="${tmp_dir}/${safe_name}"
 
     printf 'Downloading %s\n' "${url}"
     download "${url}" "${archive}"
 
     member="$(select_member "${archive}" "${output_file}" "${tar_member}")"
     printf 'Extracting %s -> %s\n' "${member}" "${target#${ROOT_DIR}/}"
-    extract_matrix "${archive}" "${member}" "${target}" "${extract_dir}"
+    extract_matrix "${archive}" "${member}" "${target}"
     downloaded=$((downloaded + 1))
 done < "${MANIFEST}"
 
