@@ -1,7 +1,9 @@
 #include <math.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "spmv/spmv.h"
 #include "matrix/csr.h"
 #include "utils/utils.h"
@@ -10,6 +12,18 @@
 #include "reorder/reorder.h"
 #include "benchmark/metrics.h"
 #include "benchmark/benchmark.h"
+
+static void ensure_results_dir(void) {
+    if (mkdir("results", 0755) != 0 && errno != EEXIST) {
+        perror("mkdir results");
+        exit(EXIT_FAILURE);
+    }
+
+    if (mkdir(RESULTS_DIR, 0755) != 0 && errno != EEXIST) {
+        perror("mkdir " RESULTS_DIR);
+        exit(EXIT_FAILURE);
+    }
+}
 
 void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
@@ -261,6 +275,8 @@ void export_permutations(struct CSRMatrix* csr, struct Permutations* perm) {
 }
 
 FILE* open_csv(const char* path, const char* header) {
+    ensure_results_dir();
+
     FILE* f = fopen(path, "r");
     int exists = (f != NULL);
     if (f) fclose(f);

@@ -6,10 +6,10 @@
 
 #if defined(__aarch64__)
     #define PLATFORM_NAME "arm"
-    #define RESULTS_DIR   "arm_results"
+    #define RESULTS_DIR   "results/arm_results"
 #elif defined(__x86_64__)
     #define PLATFORM_NAME "x86"
-    #define RESULTS_DIR   "x86_results"
+    #define RESULTS_DIR   "results/x86_results"
 #else
     #error "Unsupported platform"
 #endif
