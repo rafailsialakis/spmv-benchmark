@@ -1,3 +1,5 @@
+"""Bar chart generators for benchmark summary figures."""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -8,6 +10,7 @@ from utils.plotting.common import save_figure
 
 
 def win_loss_summary(df_param: pd.DataFrame, label: str) -> None:
+    """Plot reordering win, neutral, and loss counts for four-thread runs."""
     logging.info("Generating win/loss summary for %s...", label)
     df = df_param.copy()
     df = df[df["threads"] == 4]
@@ -74,6 +77,7 @@ def win_loss_summary(df_param: pd.DataFrame, label: str) -> None:
 
 
 def arm_x86_comp(df_x86: pd.DataFrame, df_arm: pd.DataFrame) -> None:
+    """Plot per-matrix ARM-over-x86 speedups for four-thread runs."""
     logging.info("Generating ARM vs x86 speedup barchart...")
     logging.info("Reading dataframes...")
     df_x86_copy = (

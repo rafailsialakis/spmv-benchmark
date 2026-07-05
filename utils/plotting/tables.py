@@ -1,30 +1,27 @@
+"""LaTeX table generators for benchmark results."""
+
 import logging
 from pathlib import Path
+
 import pandas as pd
 
 TABLES_DIR = Path("figures") / "tables"
 
+
 def write_table(filename: str, tex: str) -> None:
+    """Write a generated LaTeX table into the tables output directory."""
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     with open(TABLES_DIR / filename, 'w') as f:
         f.write(tex)
 
+
 def tex_escape(value) -> str:
+    """Escape values for use in simple LaTeX table cells."""
     return str(value).replace('_', r'\_')
 
-"""
-Produces a LaTeX table with break-even iterations needed 
 
-Args:
-    path (str): The path from spmv_benchmark to the .mtx file
-
-Returns:
-    None
-
-Note:
-    In order to run correctly the permutation vectors must be saved/updated for the given matrix
-"""
 def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str):
+    """Write a LaTeX table of break-even iterations after reordering."""
     logging.info(f"Generating breakeven table for {label} architecture...")
     # Keep lines with 4 threads
     spmv = df_spmv[df_spmv['threads'] == 4].copy()
@@ -58,6 +55,7 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
 
     # Is used to sort based on smallest RCM break-even
     def sort_key(val):
+        """Return a numeric break-even value suitable for sorting."""
         try:
             return int(val)
         except:
@@ -92,18 +90,8 @@ def breakeven_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str)
     write_table(f'breakeven_table_{label}.tex', tex)
     logging.info(f"Table was saved successfully in figures/tables/breakeven_table_{label}.tex")
 
-"""
-Produces a LaTeX table with some matrix characteristics 
-(matrix, category, n, nnz, avg_nnz_row, lb, bw) 
-
-Args:
-    df_metrics (pd.DataFrame): DataFrame that contains all the matrices' metrics
-
-Returns:
-    None
-
-"""
 def matrix_characteristics_table(df_metrics: pd.DataFrame):
+    """Write a LaTeX table of matrix structural characteristics."""
     
     cols = {
         'matrix':       'Matrix',
@@ -156,18 +144,8 @@ def matrix_characteristics_table(df_metrics: pd.DataFrame):
 
     logging.info(f"Table was saved successfully in figures/tables/matrix_characteristics.tex")
 
-"""
-Produces a LaTeX table that visualizes how threading scales speedup 
-
-Args:
-    df_spmv (pd:DataFrame): Execution times of SPMxV
-    label (str): System architecture (x86 | ARM)
-
-Returns:
-    None
-
-"""
 def scaling_table(df_spmv: pd.DataFrame, label: str):
+    """Write a LaTeX table of thread scaling normalized to one thread."""
 
     matrices = ['nv2', 'circuit5M', 'audikw_1', 'kkt_power', 'Flan_1565']
     reorderings = ['none', 'rcm', 'amd', 'nd']
@@ -224,22 +202,8 @@ def scaling_table(df_spmv: pd.DataFrame, label: str):
     write_table(f'scaling_table_{label}.tex', tex)
     logging.info(f"Table was saved successfully in figures/tables/scaling_table_{label}.tex")
 
-"""
-Produces a LaTeX table that shows time taken by each measuring methodology in
-order to demonstrate that the methodology does not provide any significant 
-difference in our benchmark 
-
-Args:
-    df_cold (pd:DataFrame): Cold execution times of SPMxV
-    df_ios (pd:DataFrame): Repeated Ax execution times of SPMxV
-    df_rax (pd:DataFrame): Inupt Output swapped execution times of SPMxV
-    label (str): System architecture (x86 | ARM)
-
-Returns:
-    None
-
-"""
 def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.DataFrame, label: str):
+    """Write a LaTeX table comparing measurement methodologies."""
 
     preferred = ['nv2', 'audikw_1', 'Flan_1565', 'thermal2', 'circuit5M', 'crystk01', 's3rmt3m3']
     available = set(df_rax[(df_rax['threads'] == 4) & (df_rax['reordering'] == 'none')]['matrix'])
@@ -264,6 +228,7 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
 
     for matrix in matrices:
         def get_val(df):
+            """Return the mean GFLOP/s cell value for a methodology."""
             row = df[
                 (df['matrix'] == matrix) &
                 (df['threads'] == 4) &
@@ -287,7 +252,9 @@ def methodology_table(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.Da
 
     logging.info(f"Table was saved successfully in figures/tables/methodology_table_{label}.tex")
 
+
 def thesis_aggregate_table(df_spmv: pd.DataFrame, df_cache: pd.DataFrame, df_tlb: pd.DataFrame, label: str):
+    """Write a LaTeX aggregate table of reordering outcomes."""
     logging.info(f"Generating thesis aggregate table for {label} architecture...")
     spmv = df_spmv[df_spmv['threads'] == 4].copy()
     pivot = spmv.pivot_table(
@@ -352,7 +319,9 @@ def thesis_aggregate_table(df_spmv: pd.DataFrame, df_cache: pd.DataFrame, df_tlb
     write_table(f'thesis_aggregate_table_{label}.tex', '\n'.join(lines))
     logging.info(f"Table was saved successfully in figures/tables/thesis_aggregate_table_{label}.tex")
 
+
 def thesis_best_reordering_table(df_spmv: pd.DataFrame, df_reorder: pd.DataFrame, label: str):
+    """Write a LaTeX table of the best reordering observed per matrix."""
     logging.info(f"Generating thesis best-reordering table for {label} architecture...")
     spmv = df_spmv[df_spmv['threads'] == 4].copy()
     pivot = spmv.pivot_table(

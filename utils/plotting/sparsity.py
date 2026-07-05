@@ -1,3 +1,5 @@
+"""Sparsity-pattern plotting utilities."""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -8,6 +10,7 @@ from utils.plotting.common import save_figure
 
 
 def sparse_plot(path: str) -> None:
+    """Plot original and reordered sparsity patterns for a Matrix Market file."""
     logging.info("Generating sparsity patterns...")
     A = mmread(path).tocsr()
 

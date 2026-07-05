@@ -1,3 +1,5 @@
+"""Public plotting and table-generation utilities."""
+
 from utils.plotting.barcharts import arm_x86_comp, win_loss_summary
 from utils.plotting.faceted import cache_plot, cache_plot_normalized, tlb_plot
 from utils.plotting.heatmaps import speedup_heatmap

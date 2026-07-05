@@ -1,6 +1,9 @@
+"""Data loading and runtime configuration helpers for benchmark utilities."""
+
 import logging
 import os
 from pathlib import Path
+
 import pandas as pd
 
 if "MPLCONFIGDIR" not in os.environ:
@@ -13,16 +16,9 @@ from pandas.errors import EmptyDataError, ParserError
 
 RESULTS_DIR = Path("results")
 
-"""
-Used to read all the *.csv files and parse them as DataFrames
 
-Args:
-    None
-
-Returns:
-    df (tuple): A tuple that contains all the DataFrames
-"""
 def read_csv(path: Path, label: str):
+    """Read a benchmark CSV file, returning ``None`` when it is unavailable."""
     try:
         logging.info("Reading %s from %s", label, path)
         df = pd.read_csv(path)
@@ -36,7 +32,9 @@ def read_csv(path: Path, label: str):
         logging.exception("Skipping %s because %s could not be parsed", label, path)
     return None
 
+
 def read_files() -> tuple:
+    """Load the expected x86 and ARM benchmark result CSV files."""
     x86_dir = RESULTS_DIR / "x86_results"
     arm_dir = RESULTS_DIR / "arm_results"
 
@@ -66,10 +64,9 @@ def read_files() -> tuple:
             df_cache_x86, df_cache_arm,
             df_tlb_x86, df_tlb_arm)
 
-"""
-Initializes configuration for plt formatting
-"""
+
 def init_plt() -> None:
+    """Configure Matplotlib defaults for LaTeX-formatted thesis figures."""
     plt.rcParams.update({
         "text.usetex": True,
         "font.family": "serif",
@@ -85,10 +82,9 @@ def init_plt() -> None:
     })
     logging.info("Parameters configured successfully!")
 
-"""
-Initializes logging configuration
-"""
+
 def init_logging():
+    """Initialize root logging using the ``LOG_LEVEL`` environment variable."""
     level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
     logging.basicConfig(

@@ -1,3 +1,5 @@
+"""Distribution plot generators for benchmark results."""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -17,12 +19,14 @@ TLB_LABELS = {"dtlb_load_misses": "DTLB", "itlb_load_misses": "ITLB"}
 
 
 def _save(stem: str) -> None:
+    """Save the current distribution figure as PDF and PNG."""
     save_figure("distributions", f"{stem}.pdf", bbox_inches="tight")
     save_figure("distributions", f"{stem}.png", bbox_inches="tight", dpi=300)
     plt.close()
 
 
 def _method_values(df: pd.DataFrame, value_col: str) -> pd.DataFrame:
+    """Return per-method ratios against the original matrix ordering."""
     pivot = df.pivot_table(
         index=["matrix", "category"],
         columns="reordering",
@@ -48,6 +52,7 @@ def _method_values(df: pd.DataFrame, value_col: str) -> pd.DataFrame:
 
 
 def _reduction_values(df: pd.DataFrame, columns) -> pd.DataFrame:
+    """Return percentage counter reductions for each reordering method."""
     rows = []
     for col in columns:
         if col not in df.columns:
@@ -80,6 +85,7 @@ def _reduction_values(df: pd.DataFrame, columns) -> pd.DataFrame:
 
 
 def _annotate_histogram(ax, values: pd.Series, color: str) -> None:
+    """Draw a median marker and label on a histogram axis."""
     if values.empty:
         return
     median = values.median()
@@ -98,6 +104,7 @@ def _annotate_histogram(ax, values: pd.Series, color: str) -> None:
 
 
 def speedup_histogram(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot speedup histograms for each reordering method."""
     logging.info("Generating speedup distribution histogram for %s...", label)
     df = df_param[df_param["threads"] == threads].copy()
     speedups = _method_values(df, "time_ms")
@@ -138,6 +145,7 @@ def speedup_histogram(df_param: pd.DataFrame, label: str, threads: int = 4) -> N
 
 
 def cache_reduction_histogram(df_param: pd.DataFrame, label: str) -> None:
+    """Plot cache-miss reduction histograms for reordered matrices."""
     logging.info("Generating cache miss reduction histogram for %s...", label)
     reductions = _reduction_values(df_param.copy(), CACHE_LEVELS)
     if reductions.empty:
@@ -178,6 +186,7 @@ def cache_reduction_histogram(df_param: pd.DataFrame, label: str) -> None:
 
 
 def tlb_reduction_histogram(df_param: pd.DataFrame, label: str) -> None:
+    """Plot TLB-miss reduction histograms for reordered matrices."""
     logging.info("Generating TLB miss reduction histogram for %s...", label)
     reductions = _reduction_values(df_param.copy(), TLB_LEVELS)
     if reductions.empty:
@@ -230,6 +239,7 @@ def breakeven_histogram(
     label: str,
     threads: int = 4,
 ) -> None:
+    """Plot the iterations required to amortize preprocessing costs."""
     logging.info("Generating preprocessing break-even histogram for %s...", label)
     spmv = df_spmv_param[df_spmv_param["threads"] == threads].copy()
     pivot = spmv.pivot_table(index="matrix", columns="reordering", values="time_ms")
@@ -290,6 +300,7 @@ def breakeven_histogram(
 
 
 def structural_compression_histogram(df_metrics_param: pd.DataFrame, label: str) -> None:
+    """Plot structural metric compression factors after reordering."""
     logging.info("Generating structural compression histogram for %s...", label)
     df = df_metrics_param.copy()
     rows = []

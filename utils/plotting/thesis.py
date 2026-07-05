@@ -1,3 +1,5 @@
+"""Thesis-specific figure generators for benchmark analysis."""
+
 import logging
 
 import matplotlib.pyplot as plt
@@ -15,12 +17,14 @@ METHOD_COLORS = {"rcm": "#0072B2", "amd": "#D55E00", "nd": "#009E73"}
 
 
 def _save(stem: str) -> None:
+    """Save the current thesis figure as PDF and PNG."""
     save_figure("thesis", f"{stem}.pdf", bbox_inches="tight")
     save_figure("thesis", f"{stem}.png", bbox_inches="tight", dpi=300)
     plt.close()
 
 
 def _speedup_long(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
+    """Return long-form speedups over the original ordering."""
     df = df_param[df_param["threads"] == threads].copy()
     pivot = df.pivot_table(
         index=["matrix", "category"],
@@ -46,6 +50,7 @@ def _speedup_long(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
 
 
 def _best_speedups(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
+    """Return the best reordering speedup for each matrix."""
     speedups = _speedup_long(df_param, threads)
     if speedups.empty:
         return pd.DataFrame()
@@ -55,6 +60,7 @@ def _best_speedups(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
 
 
 def best_speedup_ranked(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot matrices ranked by their best observed reordering speedup."""
     logging.info("Generating thesis ranked best-speedup plot for %s...", label)
     best = _best_speedups(df_param, threads)
     if best.empty:
@@ -93,6 +99,7 @@ def best_speedup_ranked(df_param: pd.DataFrame, label: str, threads: int = 4) ->
 
 
 def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot speedup distributions grouped by matrix category."""
     logging.info("Generating thesis category speedup distribution for %s...", label)
     speedups = _speedup_long(df_param, threads)
     if speedups.empty:
@@ -150,6 +157,7 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
 
 
 def memory_speedup_relation(df_spmv_param: pd.DataFrame, df_cache_param: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot the relationship between L2-miss reduction and runtime speedup."""
     logging.info("Generating thesis cache/runtime relation for %s...", label)
     speedups = _speedup_long(df_spmv_param, threads)
     reductions = []
@@ -232,6 +240,7 @@ def memory_speedup_relation(df_spmv_param: pd.DataFrame, df_cache_param: pd.Data
 
 
 def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
+    """Plot reordered-to-original TLB miss ratios for each method."""
     logging.info("Generating thesis TLB ratio summary for %s...", label)
     rows = []
     df = df_tlb_param.copy()
@@ -316,6 +325,7 @@ def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
 
 
 def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot GFLOP/s variation across measurement methodologies."""
     logging.info("Generating thesis methodology stability figure for %s...", label)
     frames = []
     for name, df in [("Cold", df_cold), ("IO-swap", df_ios), ("Repeated Ax", df_rax)]:
