@@ -60,9 +60,10 @@ scripts/run_all.sh
 | Matrix files | `matrices/<category>/<matrix>.mtx` |
 | x86 CSVs | `results/x86_results/` |
 | ARM CSVs | `results/arm_results/` |
-| Heatmaps | `figures/heatmaps/` |
 | Bar charts | `figures/barcharts/` |
-| Faceted cache/TLB plots | `figures/faceted/` |
+| Scalable overview plots | `figures/overview/` |
+| Distribution plots | `figures/distributions/` |
+| Thesis figures | `figures/thesis/` |
 | Sparsity plots | `figures/sparsity/` |
 | LaTeX tables | `figures/tables/` |
 

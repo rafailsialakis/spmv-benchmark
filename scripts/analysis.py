@@ -4,7 +4,7 @@ if __name__ == "__main__" and __package__ in (None, ""):
     raise SystemExit("Run analysis from the project root with: python3 -m scripts.analysis")
 
 from utils.data import io
-from utils.plotting import barcharts, distributions, faceted, heatmaps, thesis
+from utils.plotting import barcharts, distributions, overview, thesis
 from utils.plotting import tables
 
 def run_step(label, required_inputs, action):
@@ -27,28 +27,24 @@ def generate_plots(df_rax_x86, df_ios_x86, df_cold_x86, df_reorder_x86,
     # To generate sparsity plots:
     # from utils.plotting.sparsity import sparse_plot
     # sparse_plot("matrices/Semiconductor/nv2.mtx")
-    run_step("x86 speedup heatmap", {"rax_x86": df_rax_x86},
-             lambda: heatmaps.speedup_heatmap(df_rax_x86, "x86"))
-    run_step("ARM speedup heatmap", {"rax_arm": df_rax_arm},
-             lambda: heatmaps.speedup_heatmap(df_rax_arm, "ARM"))
+    run_step("x86 speedup ECDF overview", {"rax_x86": df_rax_x86},
+             lambda: overview.speedup_ecdf(df_rax_x86, "x86"))
+    run_step("ARM speedup ECDF overview", {"rax_arm": df_rax_arm},
+             lambda: overview.speedup_ecdf(df_rax_arm, "ARM"))
     run_step("x86 win/loss summary", {"rax_x86": df_rax_x86},
              lambda: barcharts.win_loss_summary(df_rax_x86, "x86"))
     run_step("ARM win/loss summary", {"rax_arm": df_rax_arm},
              lambda: barcharts.win_loss_summary(df_rax_arm, "ARM"))
-    run_step("x86 cache miss plot", {"cache_x86": df_cache_x86},
-             lambda: faceted.cache_plot(df_cache_x86, "x86"))
-    run_step("x86 normalized cache miss plot", {"cache_x86": df_cache_x86, "metrics": df_metrics},
-             lambda: faceted.cache_plot_normalized(df_cache_x86, 'x86', df_metrics))
-    run_step("ARM cache miss plot", {"cache_arm": df_cache_arm},
-             lambda: faceted.cache_plot(df_cache_arm, "ARM"))
-    run_step("ARM normalized cache miss plot", {"cache_arm": df_cache_arm, "metrics": df_metrics},
-             lambda: faceted.cache_plot_normalized(df_cache_arm, 'ARM', df_metrics))
+    run_step("x86 cache reduction overview", {"cache_x86": df_cache_x86},
+             lambda: overview.cache_reduction_overview(df_cache_x86, "x86"))
+    run_step("ARM cache reduction overview", {"cache_arm": df_cache_arm},
+             lambda: overview.cache_reduction_overview(df_cache_arm, "ARM"))
     run_step("ARM vs x86 comparison", {"cold_x86": df_cold_x86, "cold_arm": df_cold_arm},
              lambda: barcharts.arm_x86_comp(df_cold_x86, df_cold_arm))
-    run_step("x86 TLB plot", {"tlb_x86": df_tlb_x86},
-             lambda: faceted.tlb_plot(df_tlb_x86, "x86"))
-    run_step("ARM TLB plot", {"tlb_arm": df_tlb_arm},
-             lambda: faceted.tlb_plot(df_tlb_arm, "ARM"))
+    run_step("x86 TLB reduction overview", {"tlb_x86": df_tlb_x86},
+             lambda: overview.tlb_reduction_overview(df_tlb_x86, "x86"))
+    run_step("ARM TLB reduction overview", {"tlb_arm": df_tlb_arm},
+             lambda: overview.tlb_reduction_overview(df_tlb_arm, "ARM"))
     run_step("x86 speedup histogram", {"rax_x86": df_rax_x86},
              lambda: distributions.speedup_histogram(df_rax_x86, "x86"))
     run_step("ARM speedup histogram", {"rax_arm": df_rax_arm},

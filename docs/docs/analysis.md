@@ -55,14 +55,18 @@ utils/plotting/
 
 Module responsibilities:
 
-`heatmaps.py`
-: Speedup heatmaps.
+`overview.py`
+: Scalable ECDF and counter summary plots that remain readable for large matrix
+sets.
 
 `barcharts.py`
 : Win/loss summaries and ARM-vs-x86 comparison.
 
-`faceted.py`
-: Cache and TLB faceted plots.
+`distributions.py`
+: Runtime, counter, break-even, and structural metric histograms.
+
+`thesis.py`
+: Ranked and grouped thesis figures.
 
 `sparsity.py`
 : Matrix sparsity pattern plots.
@@ -84,9 +88,10 @@ utils/data/io.py
         ▼
 scripts/analysis.py
         │
-        ├── utils/plotting/heatmaps.py
+        ├── utils/plotting/overview.py
         ├── utils/plotting/barcharts.py
-        ├── utils/plotting/faceted.py
+        ├── utils/plotting/distributions.py
+        ├── utils/plotting/thesis.py
         └── utils/plotting/tables.py
         │
         ▼
@@ -98,9 +103,10 @@ figures/<type>/
 Figures are grouped by output type:
 
 ```text
-figures/heatmaps/
 figures/barcharts/
-figures/faceted/
+figures/overview/
+figures/distributions/
+figures/thesis/
 figures/sparsity/
 figures/tables/
 ```
@@ -108,9 +114,10 @@ figures/tables/
 Examples:
 
 ```text
-figures/heatmaps/speedup_heatmap_x86.pdf
 figures/barcharts/win_loss_ARM.pdf
-figures/faceted/cache_miss_faceted_x86.pdf
+figures/overview/speedup_ecdf_x86.pdf
+figures/distributions/cache_reduction_histogram_x86.pdf
+figures/thesis/best_speedup_ranked_x86.pdf
 figures/tables/scaling_table_ARM.tex
 ```
 
@@ -118,9 +125,9 @@ figures/tables/scaling_table_ARM.tex
 
 | File | Producer | Main use |
 | --- | --- | --- |
-| `metrics.csv` | `make run-all` | Matrix characteristics and normalized cache plots |
+| `metrics.csv` | `make run-all` | Matrix characteristics and structural compression plots |
 | `reorder_times.csv` | `make run-all` | Break-even tables |
-| `rax.csv` | `make run-all` | Heatmaps, scaling, win/loss summaries |
+| `rax.csv` | `make run-all` | Speedup overviews, scaling, win/loss summaries |
 | `ios.csv` | `make run-all` | Methodology comparison |
 | `cold.csv` | `make run-all` | Methodology and ARM-vs-x86 comparison |
 | `cache.csv` | `make run-all-cache` | Cache miss plots |

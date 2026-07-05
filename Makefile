@@ -7,6 +7,15 @@ LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lm -lpapi
 
 # Directories
 SRC_DIR = src
+UNAME_M = $(shell uname -m)
+
+ifeq ($(UNAME_M),aarch64)
+RESULTS_DIR = results/arm_results
+else ifeq ($(UNAME_M),x86_64)
+RESULTS_DIR = results/x86_results
+else
+$(error Unsupported platform: $(UNAME_M))
+endif
 
 # Source groups
 MATRIX_SRC   = $(SRC_DIR)/matrix/coo.c \
@@ -72,17 +81,35 @@ run-tlb: $(BIN4)
 
 run-all: $(BIN1)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
-		./$(BIN1) $$mtx; \
+		category=$$(dirname "$$mtx"); \
+		matrix=$$(basename "$$mtx" .mtx); \
+		if [ -f "$(RESULTS_DIR)/metrics.csv" ] && awk -F, -v matrix="$$matrix" -v category="$$category" 'NR > 1 && $$1 == matrix && $$2 == category { found = 1; exit } END { exit !found }' "$(RESULTS_DIR)/metrics.csv"; then \
+			printf 'Skipping %s: already present in %s\n' "$$mtx" "$(RESULTS_DIR)/metrics.csv"; \
+		else \
+			./$(BIN1) $$mtx; \
+		fi; \
 	done
 
 run-all-cache: $(BIN3)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
-		./$(BIN3) $$mtx; \
+		category=$$(dirname "$$mtx"); \
+		matrix=$$(basename "$$mtx" .mtx); \
+		if [ -f "$(RESULTS_DIR)/cache.csv" ] && awk -F, -v matrix="$$matrix" -v category="$$category" 'NR > 1 && $$1 == matrix && $$2 == category { found = 1; exit } END { exit !found }' "$(RESULTS_DIR)/cache.csv"; then \
+			printf 'Skipping %s: already present in %s\n' "$$mtx" "$(RESULTS_DIR)/cache.csv"; \
+		else \
+			./$(BIN3) $$mtx; \
+		fi; \
 	done
 
 run-all-tlb: $(BIN4)
 	@for mtx in $$(find matrices -name "*.mtx" | sed 's|matrices/||'); do \
-		./$(BIN4) $$mtx; \
+		category=$$(dirname "$$mtx"); \
+		matrix=$$(basename "$$mtx" .mtx); \
+		if [ -f "$(RESULTS_DIR)/tlb.csv" ] && awk -F, -v matrix="$$matrix" -v category="$$category" 'NR > 1 && $$1 == matrix && $$2 == category { found = 1; exit } END { exit !found }' "$(RESULTS_DIR)/tlb.csv"; then \
+			printf 'Skipping %s: already present in %s\n' "$$mtx" "$(RESULTS_DIR)/tlb.csv"; \
+		else \
+			./$(BIN4) $$mtx; \
+		fi; \
 	done
 
 download-matrices:

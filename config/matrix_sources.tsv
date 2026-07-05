@@ -12,7 +12,6 @@ Structural	bmw7st_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/bmw7st_1.tar.gz
 Structural	cant.mtx	https://sparse.tamu.edu/MM/Williams/cant.tar.gz
 Structural	oilpan.mtx	https://sparse.tamu.edu/MM/GHS_psdef/oilpan.tar.gz
 Structural	bmwcra_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/bmwcra_1.tar.gz
-Structural	crankseg_1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/crankseg_1.tar.gz
 Structural	crankseg_2.mtx	https://sparse.tamu.edu/MM/GHS_psdef/crankseg_2.tar.gz
 
 # Geomechanics and reservoir mechanics
@@ -20,6 +19,9 @@ Geomechanics	Geo_1438.mtx	https://sparse.tamu.edu/MM/Janna/Geo_1438.tar.gz
 Geomechanics	Serena.mtx	https://sparse.tamu.edu/MM/Janna/Serena.tar.gz
 Geomechanics	Emilia_923.mtx	https://sparse.tamu.edu/MM/Janna/Emilia_923.tar.gz
 Geomechanics	Fault_639.mtx	https://sparse.tamu.edu/MM/Janna/Fault_639.tar.gz
+Geomechanics	Queen_4147.mtx	https://sparse.tamu.edu/MM/Janna/Queen_4147.tar.gz
+Geomechanics	ML_Geer.mtx	https://sparse.tamu.edu/MM/Janna/ML_Geer.tar.gz
+Geomechanics	Long_Coup_dt6.mtx	https://sparse.tamu.edu/MM/Janna/Long_Coup_dt6.tar.gz
 
 # PDE / FEM discretizations
 PDE	consph.mtx	https://sparse.tamu.edu/MM/Williams/consph.tar.gz
@@ -27,6 +29,11 @@ PDE	thermal1.mtx	https://sparse.tamu.edu/MM/Schmid/thermal1.tar.gz
 PDE	thermal2.mtx	https://sparse.tamu.edu/MM/Schmid/thermal2.tar.gz
 PDE	apache1.mtx	https://sparse.tamu.edu/MM/GHS_psdef/apache1.tar.gz
 PDE	apache2.mtx	https://sparse.tamu.edu/MM/GHS_psdef/apache2.tar.gz
+PDE	parabolic_fem.mtx	https://sparse.tamu.edu/MM/Wissgott/parabolic_fem.tar.gz
+PDE	ecology1.mtx	https://sparse.tamu.edu/MM/McRae/ecology1.tar.gz
+PDE	ecology2.mtx	https://sparse.tamu.edu/MM/McRae/ecology2.tar.gz
+PDE	thermomech_TC.mtx	https://sparse.tamu.edu/MM/Botonakis/thermomech_TC.tar.gz
+PDE	thermomech_TK.mtx	https://sparse.tamu.edu/MM/Botonakis/thermomech_TK.tar.gz
 
 # Computational fluid dynamics
 CFD	atmosmodd.mtx	https://sparse.tamu.edu/MM/Bourchtein/atmosmodd.tar.gz
@@ -34,27 +41,38 @@ CFD	rma10.mtx	https://sparse.tamu.edu/MM/Bova/rma10.tar.gz
 CFD	cfd1.mtx	https://sparse.tamu.edu/MM/Rothberg/cfd1.tar.gz
 CFD	cfd2.mtx	https://sparse.tamu.edu/MM/Rothberg/cfd2.tar.gz
 CFD	StocF-1465.mtx	https://sparse.tamu.edu/MM/Janna/StocF-1465.tar.gz
+CFD	tmt_sym.mtx	https://sparse.tamu.edu/MM/CEMW/tmt_sym.tar.gz
+CFD	venkat01.mtx	https://sparse.tamu.edu/MM/Simon/venkat01.tar.gz
+CFD	venkat25.mtx	https://sparse.tamu.edu/MM/Simon/venkat25.tar.gz
+CFD	Freescale1.mtx	https://sparse.tamu.edu/MM/Freescale/Freescale1.tar.gz
 
 # Optimization / KKT systems
 Optimization	kkt_power.mtx	https://sparse.tamu.edu/MM/Zaoui/kkt_power.tar.gz
-Optimization	nlpkkt80.mtx	https://sparse.tamu.edu/MM/Schenk/nlpkkt80.tar.gz
-Optimization	nlpkkt120.mtx	https://sparse.tamu.edu/MM/Schenk/nlpkkt120.tar.gz
+Optimization	nlpkkt160.mtx	https://sparse.tamu.edu/MM/Schenk/nlpkkt160.tar.gz
 Optimization	mip1.mtx	https://sparse.tamu.edu/MM/Andrianov/mip1.tar.gz
 Optimization	largebasis.mtx	https://sparse.tamu.edu/MM/QLi/largebasis.tar.gz
+Optimization	cont11_l.mtx	https://sparse.tamu.edu/MM/Mittelmann/cont11_l.tar.gz
+Optimization	aug3d.mtx	https://sparse.tamu.edu/MM/GHS_indef/aug3d.tar.gz
 
 # Circuit simulation
 Circuit	G2_circuit.mtx	https://sparse.tamu.edu/MM/AMD/G2_circuit.tar.gz
 Circuit	G3_circuit.mtx	https://sparse.tamu.edu/MM/AMD/G3_circuit.tar.gz
 Circuit	circuit5M.mtx	https://sparse.tamu.edu/MM/Freescale/circuit5M.tar.gz
-Circuit	ASIC_100k.mtx	https://sparse.tamu.edu/MM/Sandia/ASIC_100k.tar.gz
-Circuit	ASIC_320k.mtx	https://sparse.tamu.edu/MM/Sandia/ASIC_320k.tar.gz
 Circuit	ASIC_680k.mtx	https://sparse.tamu.edu/MM/Sandia/ASIC_680k.tar.gz
+Circuit	Ga3As3H12.mtx	https://sparse.tamu.edu/MM/PARSEC/Ga3As3H12.tar.gz
+Circuit	memchip.mtx	https://sparse.tamu.edu/MM/Freescale/memchip.tar.gz
 
 # Semiconductor device/process simulation
+Semiconductor	nv1.mtx	https://sparse.tamu.edu/MM/VLSI/nv1.tar.gz
 Semiconductor	nv2.mtx	https://sparse.tamu.edu/MM/VLSI/nv2.tar.gz
 Semiconductor	dgreen.mtx	https://sparse.tamu.edu/MM/VLSI/dgreen.tar.gz
+Semiconductor	test1.mtx	https://sparse.tamu.edu/MM/VLSI/test1
+Semiconductor	test1.mtx	https://sparse.tamu.edu/MM/VLSI/radiation
 
 # Mechanical model reduction
 ModelReduction	gyro.mtx	https://sparse.tamu.edu/MM/Oberwolfach/gyro.tar.gz
 ModelReduction	filter3D.mtx	https://sparse.tamu.edu/MM/Oberwolfach/filter3D.tar.gz
 ModelReduction	t3dh_a.mtx	https://sparse.tamu.edu/MM/Oberwolfach/t3dh_a.tar.gz
+ModelReduction	rail_79841.mtx	https://sparse.tamu.edu/MM/Oberwolfach/rail_79841.tar.gz
+ModelReduction	mhd4800a.mtx	https://sparse.tamu.edu/MM/Bai/mhd4800a.tar.gz
+ModelReduction	mhd4800b.mtx	https://sparse.tamu.edu/MM/Bai/mhd4800b.tar.gz

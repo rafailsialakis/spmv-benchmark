@@ -52,9 +52,10 @@ bin/
 matrices/
 results/x86_results/
 results/arm_results/
-figures/heatmaps/
 figures/barcharts/
-figures/faceted/
+figures/overview/
+figures/distributions/
+figures/thesis/
 figures/sparsity/
 figures/tables/
 ```
@@ -275,9 +276,10 @@ skipped with warnings.
 Generated outputs:
 
 ```text
-figures/heatmaps/
 figures/barcharts/
-figures/faceted/
+figures/overview/
+figures/distributions/
+figures/thesis/
 figures/sparsity/
 figures/tables/
 ```

@@ -65,9 +65,10 @@ results/arm_results/
 type:
 
 ```text
-utils/plotting/heatmaps.py
 utils/plotting/barcharts.py
-utils/plotting/faceted.py
+utils/plotting/distributions.py
+utils/plotting/overview.py
+utils/plotting/thesis.py
 utils/plotting/sparsity.py
 utils/plotting/tables.py
 ```

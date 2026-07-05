@@ -340,23 +340,60 @@ def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: p
     if "Repeated Ax" not in pivot.columns:
         logging.warning("Skipping methodology stability for %s; missing repeated-Ax baseline", label)
         return
-    deltas = pivot[["Cold", "IO-swap"]].sub(pivot["Repeated Ax"], axis=0).div(pivot["Repeated Ax"], axis=0) * 100.0
-    deltas = deltas.sort_values("Cold", ascending=True)
+    available = [name for name in ["Cold", "IO-swap"] if name in pivot.columns]
+    if not available:
+        logging.warning("Skipping methodology stability for %s; no comparison methodology columns", label)
+        return
 
-    fig_height = max(4.2, 0.22 * len(deltas) + 1.2)
-    fig, ax = plt.subplots(figsize=(6.7, fig_height))
-    sns.heatmap(
-        deltas,
-        annot=True,
-        fmt=".1f",
-        cmap="vlag",
-        center=0,
-        linewidths=0.4,
-        cbar_kws={"label": r"GFLOP/s difference vs repeated Ax (\%)"},
+    deltas = pivot[available].sub(pivot["Repeated Ax"], axis=0).div(pivot["Repeated Ax"], axis=0) * 100.0
+    long = (
+        deltas.reset_index()
+        .melt(
+            id_vars=["matrix", "category"],
+            value_vars=available,
+            var_name="methodology",
+            value_name="delta",
+        )
+        .dropna()
+    )
+    if long.empty:
+        logging.warning("Skipping methodology stability for %s; no comparable rows", label)
+        return
+
+    fig, ax = plt.subplots(figsize=(5.8, 3.6))
+    ax.axhspan(-5, 5, color="#D9D9D9", alpha=0.45, zorder=0)
+    sns.boxplot(
+        data=long,
+        x="methodology",
+        y="delta",
+        order=available,
+        color="#BDBDBD",
+        fliersize=0,
+        linewidth=0.9,
+        width=0.5,
         ax=ax,
     )
+    sns.stripplot(
+        data=long,
+        x="methodology",
+        y="delta",
+        order=available,
+        hue="category",
+        dodge=False,
+        jitter=0.18,
+        alpha=0.55,
+        size=2.8,
+        linewidth=0,
+        ax=ax,
+    )
+    ax.axhline(0.0, color="#333333", linestyle="--", linewidth=1.0)
     ax.set_xlabel("Measurement methodology")
-    ax.set_ylabel("Matrix")
+    ax.set_ylabel(r"GFLOP/s difference vs repeated Ax (\%)")
     ax.set_title(f"Measurement Methodology Stability ({threads} threads, {label})", fontsize=12)
+    ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
+    ax.spines[["top", "right"]].set_visible(False)
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(handles, labels, title="", frameon=False, fontsize=7, loc="best")
     fig.tight_layout()
     _save(f"methodology_stability_{label}")
