@@ -66,8 +66,7 @@ Circuit	memchip.mtx	https://sparse.tamu.edu/MM/Freescale/memchip.tar.gz
 Semiconductor	nv1.mtx	https://sparse.tamu.edu/MM/VLSI/nv1.tar.gz
 Semiconductor	nv2.mtx	https://sparse.tamu.edu/MM/VLSI/nv2.tar.gz
 Semiconductor	dgreen.mtx	https://sparse.tamu.edu/MM/VLSI/dgreen.tar.gz
-Semiconductor	test1.mtx	https://sparse.tamu.edu/MM/VLSI/test1
-Semiconductor	test1.mtx	https://sparse.tamu.edu/MM/VLSI/radiation
+Semiconductor	test1.mtx	https://sparse.tamu.edu/MM/VLSI/test1.tar.gz
 
 # Mechanical model reduction
 ModelReduction	gyro.mtx	https://sparse.tamu.edu/MM/Oberwolfach/gyro.tar.gz
