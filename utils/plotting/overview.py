@@ -137,7 +137,7 @@ def _counter_interval_plot(
         logging.warning("Skipping %s; no available counters", stem)
         return
 
-    fig, axes = plt.subplots(1, len(available), figsize=(3.0 * len(available), 3.5), sharey=True)
+    fig, axes = plt.subplots(1, len(available), figsize=(3.0 * len(available), 3.5), sharey=False)
     axes = np.atleast_1d(axes)
     x = np.arange(len(METHODS))
 
@@ -160,6 +160,8 @@ def _counter_interval_plot(
         ax.set_title(labels[counter], fontsize=10)
         ax.set_xticks(x)
         ax.set_xticklabels([METHOD_LABELS[m] for m in METHODS])
+        if ax is not axes[0]:
+            ax.set_ylabel("")
         ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
         ax.spines[["top", "right"]].set_visible(False)
 

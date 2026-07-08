@@ -114,7 +114,7 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
         .tolist()
     )
 
-    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    fig, ax = plt.subplots(figsize=(8.4, 4.0))
     ax.axhspan(0.95, 1.05, color="#D9D9D9", alpha=0.55, zorder=0)
     sns.boxplot(
         data=speedups,
@@ -147,6 +147,9 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
     ax.set_xlabel("Matrix category")
     ax.set_ylabel("Speedup over original")
     ax.set_title(f"Speedup Distribution by Category ({threads} threads, {label})", fontsize=12)
+    ax.tick_params(axis="x", labelrotation=25)
+    for tick in ax.get_xticklabels():
+        tick.set_ha("right")
     ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
     ax.spines[["top", "right"]].set_visible(False)
 

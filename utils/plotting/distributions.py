@@ -103,6 +103,39 @@ def _annotate_histogram(ax, values: pd.Series, color: str) -> None:
     )
 
 
+def _reduction_bins(values: pd.Series, step: int = 10) -> np.ndarray:
+    """Return robust bins for percentage reductions, keeping extreme tails visible."""
+    if values.empty:
+        return np.linspace(-100, 100, 17)
+    lower = min(-100.0, np.floor(values.quantile(0.01) / step) * step)
+    upper = max(100.0, np.ceil(values.quantile(0.99) / step) * step)
+    if lower == upper:
+        lower -= step
+        upper += step
+    return np.linspace(lower, upper, 17)
+
+
+def _annotate_clipped_tails(ax, low_count: int, high_count: int) -> None:
+    """Label values clipped into the edge bins."""
+    if low_count == 0 and high_count == 0:
+        return
+    parts = []
+    if low_count:
+        parts.append(f"{low_count} below axis")
+    if high_count:
+        parts.append(f"{high_count} above axis")
+    ax.text(
+        0.02,
+        0.95,
+        ", ".join(parts),
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=7,
+        color="#555555",
+    )
+
+
 def speedup_histogram(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
     """Plot speedup histograms for each reordering method."""
     logging.info("Generating speedup distribution histogram for %s...", label)
@@ -152,26 +185,30 @@ def cache_reduction_histogram(df_param: pd.DataFrame, label: str) -> None:
         logging.warning("Skipping cache reduction histogram for %s; no comparable rows", label)
         return
 
-    fig, axes = plt.subplots(1, 3, figsize=(9.2, 2.9), sharey=True)
-    bins = np.linspace(
-        max(-100, np.floor(reductions["value"].min() / 10) * 10),
-        min(100, np.ceil(reductions["value"].max() / 10) * 10),
-        17,
-    )
-    for ax, counter in zip(axes, CACHE_LEVELS):
+    available = [counter for counter in CACHE_LEVELS if counter in reductions["counter"].unique()]
+    fig, axes = plt.subplots(1, len(available), figsize=(3.1 * len(available), 2.9), sharey=True)
+    axes = np.atleast_1d(axes)
+    for ax, counter in zip(axes, available):
+        counter_values = reductions[reductions["counter"] == counter]["value"]
+        bins = _reduction_bins(counter_values)
+        low_clip = 0
+        high_clip = 0
         for method in METHODS:
             vals = reductions[
                 (reductions["counter"] == counter) &
                 (reductions["reordering"] == method)
             ]["value"]
+            low_clip += int((vals < bins[0]).sum())
+            high_clip += int((vals > bins[-1]).sum())
             ax.hist(
-                vals,
+                vals.clip(lower=bins[0], upper=bins[-1]),
                 bins=bins,
                 histtype="step",
                 linewidth=1.7,
                 color=METHOD_COLORS[method],
                 label=METHOD_LABELS[method],
             )
+        _annotate_clipped_tails(ax, low_clip, high_clip)
         ax.axvline(0.0, color="#333333", linestyle="--", linewidth=1.0)
         ax.set_title(f"{CACHE_LABELS[counter]} misses", fontsize=10)
         ax.set_xlabel(r"Reduction vs original (\%)")
@@ -194,32 +231,35 @@ def tlb_reduction_histogram(df_param: pd.DataFrame, label: str) -> None:
         return
 
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 2.9), sharey=True)
-    bins = np.linspace(
-        max(-100, np.floor(reductions["value"].min() / 10) * 10),
-        min(100, np.ceil(reductions["value"].max() / 10) * 10),
-        17,
-    )
     for ax, counter in zip(axes, TLB_LEVELS):
+        counter_values = reductions[reductions["counter"] == counter]["value"]
+        bins = _reduction_bins(counter_values)
+        low_clip = 0
+        high_clip = 0
         for method in METHODS:
             vals = reductions[
                 (reductions["counter"] == counter) &
                 (reductions["reordering"] == method)
             ]["value"]
+            clipped_vals = vals.clip(lower=bins[0], upper=bins[-1])
+            low_clip += int((vals < bins[0]).sum())
+            high_clip += int((vals > bins[-1]).sum())
             ax.hist(
-                vals,
+                clipped_vals,
                 bins=bins,
                 histtype="stepfilled",
                 alpha=0.16,
                 color=METHOD_COLORS[method],
             )
             ax.hist(
-                vals,
+                clipped_vals,
                 bins=bins,
                 histtype="step",
                 linewidth=1.5,
                 color=METHOD_COLORS[method],
                 label=METHOD_LABELS[method],
             )
+        _annotate_clipped_tails(ax, low_clip, high_clip)
         ax.axvline(0.0, color="#333333", linestyle="--", linewidth=1.0)
         ax.set_title(f"{TLB_LABELS[counter]} misses", fontsize=10)
         ax.set_xlabel(r"Reduction vs original (\%)")
