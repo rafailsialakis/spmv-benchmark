@@ -67,20 +67,42 @@ def read_files() -> tuple:
 
 def init_plt() -> None:
     """Configure Matplotlib defaults for LaTeX-formatted thesis figures."""
+    use_tex = os.environ.get("SPMV_PLOT_USETEX", "1") != "0"
     plt.rcParams.update({
-        "text.usetex": True,
+        "text.usetex": use_tex,
         "font.family": "serif",
-        "font.serif": ["Computer Modern Roman"],
+        "font.serif": ["Computer Modern Roman", "CMU Serif", "DejaVu Serif"],
         "text.latex.preamble": r"\usepackage{amsmath}",
-        "font.size": 12,
-        "axes.titlesize": 14,
-        "axes.labelsize": 12,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "axes.formatter.use_mathtext": True,  
-        "pgf.texsystem": "pdflatex",          
+        "font.size": 8,
+        "axes.titlesize": 8,
+        "axes.labelsize": 8,
+        "xtick.labelsize": 7,
+        "ytick.labelsize": 7,
+        "legend.fontsize": 7,
+        "legend.title_fontsize": 7,
+        "lines.linewidth": 1.2,
+        "lines.markersize": 3.5,
+        "patch.linewidth": 0.6,
+        "axes.linewidth": 0.7,
+        "xtick.major.width": 0.7,
+        "ytick.major.width": 0.7,
+        "xtick.minor.width": 0.5,
+        "ytick.minor.width": 0.5,
+        "xtick.direction": "out",
+        "ytick.direction": "out",
+        "legend.frameon": False,
+        "figure.dpi": 150,
+        "savefig.dpi": 600,
+        "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.02,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+        "svg.fonttype": "none",
+        "axes.formatter.use_mathtext": True,
+        "pgf.texsystem": "pdflatex",
+        "pgf.rcfonts": False,
     })
-    logging.info("Parameters configured successfully!")
+    logging.info("Matplotlib parameters configured successfully!")
 
 
 def init_logging():

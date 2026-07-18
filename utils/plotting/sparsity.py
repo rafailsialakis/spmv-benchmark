@@ -1,12 +1,13 @@
 """Sparsity-pattern plotting utilities."""
 
 import logging
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import mmread
 
-from utils.plotting.common import save_figure
+from utils.plotting.common import DOUBLE_COLUMN_WIDTH, paper_axes, save_figure
 
 
 def sparse_plot(path: str) -> None:
@@ -25,19 +26,23 @@ def sparse_plot(path: str) -> None:
     logging.info("Matrices permuted successfully!")
 
     logging.info("Plotting...")
-    fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+    fig, axes = plt.subplots(2, 2, figsize=(DOUBLE_COLUMN_WIDTH, DOUBLE_COLUMN_WIDTH))
 
     for ax, matrix, title in zip(
         axes.flat,
         [A, B, C, D],
         ["Original", "RCM", "AMD", "ND"],
     ):
-        ax.spy(matrix, markersize=0.1, rasterized=True)
+        ax.spy(matrix, markersize=0.08, rasterized=True)
         ax.set_title(title)
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        paper_axes(ax, grid_axis=None)
 
-    plt.tight_layout()
+    fig.tight_layout(pad=0.35)
 
-    name = path.split("/")[-1].split(".")[0]
-    save_figure("sparsity", f"{name}_sparsity_plot.pdf", dpi=300)
+    name = Path(path).stem
+    save_figure("sparsity", f"{name}_sparsity_plot.pdf")
+    save_figure("sparsity", f"{name}_sparsity_plot.png")
     logging.info("Plot was saved successfully in figures/sparsity/%s_sparsity_plot.pdf", name)
-    plt.show()
+    plt.close(fig)

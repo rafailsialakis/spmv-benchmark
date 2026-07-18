@@ -6,20 +6,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.lines import Line2D
 
-from utils.plotting.common import save_figure
+from utils.plotting.common import (
+    DOUBLE_COLUMN_WIDTH,
+    NEUTRAL_BAND,
+    REFERENCE_COLOR,
+    SINGLE_COLUMN_WIDTH,
+    paper_axes,
+    save_figure,
+)
 
 
 METHODS = ["rcm", "amd", "nd"]
 METHOD_LABELS = {"rcm": "RCM", "amd": "AMD", "nd": "ND"}
-METHOD_COLORS = {"rcm": "#0072B2", "amd": "#D55E00", "nd": "#009E73"}
+METHOD_COLORS = {"rcm": "#3B6EA8", "amd": "#B45F2A", "nd": "#3D8B62"}
+OUTCOME_COLORS = {
+    "Improved": "#4C8C5A",
+    "Neutral": "#D8D8D8",
+    "Regressed": "#B85C4C",
+}
 
 
 def _save(stem: str) -> None:
     """Save the current thesis figure as PDF and PNG."""
-    save_figure("thesis", f"{stem}.pdf", bbox_inches="tight")
-    save_figure("thesis", f"{stem}.png", bbox_inches="tight", dpi=300)
+    save_figure("thesis", f"{stem}.pdf")
+    save_figure("thesis", f"{stem}.png")
     plt.close()
 
 
@@ -49,53 +60,77 @@ def _speedup_long(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
 
 
-def _best_speedups(df_param: pd.DataFrame, threads: int = 4) -> pd.DataFrame:
-    """Return the best reordering speedup for each matrix."""
-    speedups = _speedup_long(df_param, threads)
-    if speedups.empty:
-        return pd.DataFrame()
-    idx = speedups.groupby("matrix")["speedup"].idxmax()
-    best = speedups.loc[idx].copy()
-    return best.sort_values("speedup", ascending=True)
+def _breakeven_long(
+    df_spmv_param: pd.DataFrame,
+    df_reorder_param: pd.DataFrame,
+    threads: int = 4,
+) -> pd.DataFrame:
+    """Return break-even iterations for matrix-method pairs with positive runtime gain."""
+    spmv = df_spmv_param[df_spmv_param["threads"] == threads].copy()
+    pivot = spmv.pivot_table(index="matrix", columns="reordering", values="time_ms", aggfunc="mean")
+    rows = []
+    for _, row in df_reorder_param.iterrows():
+        matrix = row["matrix"]
+        method = row["reordering"]
+        if method not in METHODS or matrix not in pivot.index:
+            continue
+        if "none" not in pivot.columns or method not in pivot.columns:
+            continue
+        gain_s = (pivot.loc[matrix, "none"] - pivot.loc[matrix, method]) / 1000.0
+        if gain_s <= 0:
+            continue
+        rows.append(
+            {
+                "matrix": matrix,
+                "reordering": method,
+                "iterations": row["time_s"] / gain_s,
+            }
+        )
+    return pd.DataFrame(rows)
 
 
-def best_speedup_ranked(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
-    """Plot matrices ranked by their best observed reordering speedup."""
-    logging.info("Generating thesis ranked best-speedup plot for %s...", label)
-    best = _best_speedups(df_param, threads)
-    if best.empty:
-        logging.warning("Skipping ranked best-speedup plot for %s; no speedups", label)
+def preprocessing_breakeven_boxplot(
+    df_spmv_param: pd.DataFrame,
+    df_reorder_param: pd.DataFrame,
+    label: str,
+    threads: int = 4,
+) -> None:
+    """Plot preprocessing amortization as a compact boxplot."""
+    logging.info("Generating thesis break-even boxplot for %s...", label)
+    breakeven = _breakeven_long(df_spmv_param, df_reorder_param, threads)
+    if breakeven.empty:
+        logging.warning("Skipping break-even boxplot for %s; no positive gains", label)
         return
 
-    best["display"] = best["category"] + " / " + best["matrix"]
-    colors = best["reordering"].map(METHOD_COLORS)
-
-    fig_height = max(5.2, 0.28 * len(best) + 1.5)
-    fig, ax = plt.subplots(figsize=(7.2, fig_height))
-    y = np.arange(len(best))
-    ax.axvspan(0.95, 1.05, color="#D9D9D9", alpha=0.55, zorder=0)
-    ax.barh(y, best["speedup"], color=colors, alpha=0.9, edgecolor="white", zorder=3)
-    ax.axvline(1.0, color="#333333", linestyle="--", linewidth=1.0, zorder=4)
-
-    for yi, speedup in zip(y, best["speedup"]):
-        if speedup >= 1.08:
-            ax.text(speedup + 0.035, yi, f"{speedup:.2f}", va="center", fontsize=7.5)
-
-    ax.set_yticks(y)
-    ax.set_yticklabels(best["display"], fontsize=8)
-    ax.set_xlabel("Best speedup over original ordering")
-    ax.set_title(f"Best Reordering per Matrix ({threads} threads, {label})", fontsize=12)
-    ax.grid(axis="x", color="#D0D0D0", linestyle=":", linewidth=0.6)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.set_xlim(left=0, right=max(1.25, best["speedup"].max() * 1.12))
-
-    legend = [
-        Line2D([0], [0], color=METHOD_COLORS[m], lw=6, label=METHOD_LABELS[m])
-        for m in METHODS
-    ]
-    ax.legend(handles=legend, frameon=False, fontsize=8, loc="lower right")
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.35))
+    sns.boxplot(
+        data=breakeven,
+        x="reordering",
+        y="iterations",
+        hue="reordering",
+        order=METHODS,
+        hue_order=METHODS,
+        palette=METHOD_COLORS,
+        width=0.52,
+        fliersize=1.9,
+        linewidth=0.75,
+        saturation=0.78,
+        dodge=False,
+        legend=False,
+        ax=ax,
+    )
+    ax.axhline(100, color="#555555", linestyle=":", linewidth=0.75)
+    ax.axhline(1000, color="#555555", linestyle=":", linewidth=0.75)
+    ax.text(2.45, 100, r"$10^2$", ha="right", va="bottom", fontsize=6.5, color="#555555")
+    ax.text(2.45, 1000, r"$10^3$", ha="right", va="bottom", fontsize=6.5, color="#555555")
+    ax.set_yscale("log")
+    ax.set_xlabel("")
+    ax.set_ylabel("Break-even SpMV iterations")
+    ax.set_xticks(range(len(METHODS)))
+    ax.set_xticklabels([METHOD_LABELS[m] for m in METHODS])
+    paper_axes(ax, grid_axis="y")
     fig.tight_layout()
-    _save(f"best_speedup_ranked_{label}")
+    _save(f"preprocessing_breakeven_boxplot_{label}")
 
 
 def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
@@ -114,8 +149,8 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
         .tolist()
     )
 
-    fig, ax = plt.subplots(figsize=(8.4, 4.0))
-    ax.axhspan(0.95, 1.05, color="#D9D9D9", alpha=0.55, zorder=0)
+    fig, ax = plt.subplots(figsize=(DOUBLE_COLUMN_WIDTH, 2.8))
+    ax.axhspan(0.95, 1.05, color=NEUTRAL_BAND, alpha=0.85, zorder=0)
     sns.boxplot(
         data=speedups,
         x="category",
@@ -125,50 +160,186 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
         hue_order=METHODS,
         palette=METHOD_COLORS,
         width=0.65,
-        fliersize=0,
-        linewidth=0.8,
+        fliersize=1.8,
+        linewidth=0.75,
+        saturation=0.78,
         ax=ax,
     )
-    sns.stripplot(
-        data=speedups,
-        x="category",
-        y="speedup",
-        hue="reordering",
-        order=order,
-        hue_order=METHODS,
-        palette=METHOD_COLORS,
-        dodge=True,
-        size=3,
-        alpha=0.65,
-        linewidth=0,
-        ax=ax,
-    )
-    ax.axhline(1.0, color="#333333", linestyle="--", linewidth=1.0)
+    ax.axhline(1.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
     ax.set_xlabel("Matrix category")
-    ax.set_ylabel("Speedup over original")
-    ax.set_title(f"Speedup Distribution by Category ({threads} threads, {label})", fontsize=12)
-    ax.tick_params(axis="x", labelrotation=25)
+    ax.set_ylabel(r"Speedup, $T_{\mathrm{orig}}/T_{\mathrm{reord}}$")
+    ax.tick_params(axis="x", labelrotation=20)
     for tick in ax.get_xticklabels():
         tick.set_ha("right")
-    ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
-    ax.spines[["top", "right"]].set_visible(False)
+    paper_axes(ax, grid_axis="y")
 
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[:3], [METHOD_LABELS[m] for m in METHODS], frameon=False, ncol=3, fontsize=8)
+    ax.legend(
+        handles[:3],
+        [METHOD_LABELS[m] for m in METHODS],
+        ncol=3,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.12),
+        handlelength=1.3,
+        columnspacing=1.0,
+    )
     fig.tight_layout()
     _save(f"category_speedup_distribution_{label}")
 
 
-def memory_speedup_relation(df_spmv_param: pd.DataFrame, df_cache_param: pd.DataFrame, label: str, threads: int = 4) -> None:
-    """Plot the relationship between L2-miss reduction and runtime speedup."""
-    logging.info("Generating thesis cache/runtime relation for %s...", label)
-    speedups = _speedup_long(df_spmv_param, threads)
-    reductions = []
-    cache = df_cache_param.copy()
-    for level in ["L1_misses", "L2_misses", "L3_misses"]:
-        if level not in cache.columns:
+def outcome_fraction_bars(df_param: pd.DataFrame, label: str, threads: int = 4) -> None:
+    """Plot the fraction of matrices improved, neutral, or regressed by method."""
+    logging.info("Generating thesis outcome fraction plot for %s...", label)
+    speedups = _speedup_long(df_param, threads)
+    if speedups.empty:
+        logging.warning("Skipping outcome fraction plot for %s; no speedups", label)
+        return
+
+    rows = []
+    for method in METHODS:
+        values = speedups[speedups["reordering"] == method]["speedup"].dropna()
+        total = len(values)
+        if total == 0:
             continue
-        pivot = cache.pivot_table(
+        rows.append(
+            {
+                "reordering": method,
+                "Improved": (values > 1.05).sum() / total,
+                "Neutral": ((values >= 0.95) & (values <= 1.05)).sum() / total,
+                "Regressed": (values < 0.95).sum() / total,
+                "total": total,
+            }
+        )
+    fractions = pd.DataFrame(rows)
+    if fractions.empty:
+        logging.warning("Skipping outcome fraction plot for %s; no complete methods", label)
+        return
+
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.2))
+    y_pos = np.arange(len(fractions))
+    left = np.zeros(len(fractions))
+    for outcome in ["Improved", "Neutral", "Regressed"]:
+        values = fractions[outcome].to_numpy()
+        ax.barh(
+            y_pos,
+            values,
+            left=left,
+            height=0.52,
+            color=OUTCOME_COLORS[outcome],
+            edgecolor="white",
+            linewidth=0.6,
+            label=outcome,
+        )
+        for idx, value in enumerate(values):
+            if value < 0.11:
+                continue
+            x = left[idx] + value / 2.0
+            text_color = "white" if outcome != "Neutral" else "#222222"
+            ax.text(
+                x,
+                y_pos[idx],
+                rf"{value * 100:.0f}\%",
+                ha="center",
+                va="center",
+                fontsize=6.4,
+                color=text_color,
+            )
+        left += values
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([METHOD_LABELS[m] for m in fractions["reordering"]])
+    ax.set_xlim(0.0, 1.0)
+    ax.set_xlabel(r"Fraction of matrices (\%)")
+    ax.set_xticks(np.linspace(0.0, 1.0, 6))
+    ax.set_xticklabels([f"{value:.0f}" for value in np.linspace(0, 100, 6)])
+    ax.invert_yaxis()
+    paper_axes(ax, grid_axis="x")
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.22),
+        ncol=3,
+        columnspacing=0.9,
+        handlelength=1.2,
+    )
+    fig.tight_layout()
+    _save(f"outcome_fraction_bars_{label}")
+
+
+def best_reordering_agreement(
+    df_x86_param: pd.DataFrame,
+    df_arm_param: pd.DataFrame,
+    threads: int = 4,
+) -> None:
+    """Plot agreement between the best x86 and ARM reordering choices."""
+    logging.info("Generating thesis best-reordering agreement plot...")
+    x86 = _speedup_long(df_x86_param, threads).rename(columns={"speedup": "x86_speedup"})
+    arm = _speedup_long(df_arm_param, threads).rename(columns={"speedup": "arm_speedup"})
+    paired = x86.merge(arm, on=["matrix", "category", "reordering"], how="inner")
+    if paired.empty:
+        logging.warning("Skipping best-reordering agreement plot; no paired rows")
+        return
+
+    wide = paired.pivot_table(
+        index=["matrix", "category"],
+        columns="reordering",
+        values=["x86_speedup", "arm_speedup"],
+    )
+    best = pd.DataFrame(index=wide.index)
+    best["x86"] = wide["x86_speedup"].idxmax(axis=1)
+    best["arm"] = wide["arm_speedup"].idxmax(axis=1)
+    best["arm_best"] = wide["arm_speedup"].max(axis=1)
+    arm_speedups = wide["arm_speedup"]
+    best["arm_using_x86_choice"] = [
+        arm_speedups.loc[idx, method] for idx, method in best["x86"].items()
+    ]
+    practical = (best["arm_using_x86_choice"] >= 0.95 * best["arm_best"]).mean()
+
+    counts = pd.crosstab(best["x86"], best["arm"]).reindex(index=METHODS, columns=METHODS, fill_value=0)
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.7))
+    sns.heatmap(
+        counts,
+        annot=True,
+        fmt="d",
+        cmap="Greys",
+        cbar=False,
+        linewidths=0.5,
+        linecolor="white",
+        square=True,
+        ax=ax,
+        annot_kws={"fontsize": 8},
+    )
+    ax.set_xlabel("Best on ARM")
+    ax.set_ylabel("Best on x86")
+    ax.set_xticklabels([METHOD_LABELS[m] for m in METHODS], rotation=0)
+    ax.set_yticklabels([METHOD_LABELS[m] for m in METHODS], rotation=0)
+    ax.set_title("Best-reordering agreement")
+    ax.text(
+        0.0,
+        -0.24,
+        rf"x86 choice within 5\% of ARM best: {practical * 100.0:.1f}\%",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=6.5,
+    )
+    fig.tight_layout()
+    _save("best_reordering_agreement")
+
+
+def cache_miss_ratio_summary(df_cache_param: pd.DataFrame, label: str) -> None:
+    """Plot reordered-to-original cache miss ratios by cache level."""
+    logging.info("Generating thesis cache miss ratio summary for %s...", label)
+    rows = []
+    cache_levels = [
+        ("L1_misses", "L1"),
+        ("L2_misses", "L2"),
+        ("L3_misses", "L3"),
+    ]
+    df = df_cache_param.copy()
+    for level, level_label in cache_levels:
+        if level not in df.columns:
+            continue
+        pivot = df.pivot_table(
             index=["matrix", "category"],
             columns="reordering",
             values=level,
@@ -180,66 +351,55 @@ def memory_speedup_relation(df_spmv_param: pd.DataFrame, df_cache_param: pd.Data
             if method not in pivot.columns:
                 continue
             base = pivot["none"].replace(0, np.nan)
-            reductions.append(
+            rows.append(
                 pd.DataFrame(
                     {
                         "matrix": pivot.index.get_level_values("matrix"),
                         "category": pivot.index.get_level_values("category"),
                         "reordering": method,
-                        "counter": level,
-                        "reduction": ((base - pivot[method]) / base * 100.0).to_numpy(),
+                        "level": level_label,
+                        "ratio": (pivot[method] / base).to_numpy(),
                     }
                 )
             )
-    if not reductions:
-        logging.warning("Skipping cache/runtime relation for %s; no cache reductions", label)
+    ratios = pd.concat(rows, ignore_index=True).dropna() if rows else pd.DataFrame()
+    if ratios.empty:
+        logging.warning("Skipping cache ratio summary for %s; no ratios", label)
         return
 
-    cache_long = pd.concat(reductions, ignore_index=True).dropna()
-    merged = speedups.merge(
-        cache_long[cache_long["counter"] == "L2_misses"],
-        on=["matrix", "category", "reordering"],
-        how="inner",
-    )
-    if merged.empty:
-        logging.warning("Skipping cache/runtime relation for %s; no merged rows", label)
-        return
-
-    fig, ax = plt.subplots(figsize=(6.4, 4.1))
-    for method in METHODS:
-        part = merged[merged["reordering"] == method]
-        ax.scatter(
-            part["reduction"],
-            part["speedup"],
-            s=42,
-            color=METHOD_COLORS[method],
-            alpha=0.78,
-            edgecolor="white",
-            linewidth=0.5,
-            label=METHOD_LABELS[method],
+    levels = [level for _, level in cache_levels if level in ratios["level"].unique()]
+    fig, axes = plt.subplots(1, len(levels), figsize=(DOUBLE_COLUMN_WIDTH, 2.35), sharey=True)
+    axes = np.atleast_1d(axes)
+    for panel, (ax, level) in enumerate(zip(axes, levels)):
+        part = ratios[ratios["level"] == level]
+        sns.boxplot(
+            data=part,
+            x="reordering",
+            y="ratio",
+            hue="reordering",
+            order=METHODS,
+            hue_order=METHODS,
+            palette=METHOD_COLORS,
+            fliersize=1.8,
+            linewidth=0.75,
+            saturation=0.78,
+            dodge=False,
+            legend=False,
+            ax=ax,
         )
+        ax.axhline(1.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
+        ax.set_yscale("log")
+        ax.set_title(f"({chr(97 + panel)}) {level}")
+        ax.set_xlabel("")
+        ax.set_xticks(range(len(METHODS)))
+        ax.set_xticklabels([METHOD_LABELS[m] for m in METHODS])
+        paper_axes(ax, grid_axis="y")
 
-    highlight_idx = merged.groupby("matrix")["speedup"].idxmax()
-    highlight = merged.loc[highlight_idx].sort_values("speedup", ascending=False).head(5)
-    for _, row in highlight.iterrows():
-        ax.annotate(
-            row["matrix"],
-            (row["reduction"], row["speedup"]),
-            xytext=(4, 3),
-            textcoords="offset points",
-            fontsize=7,
-        )
-
-    ax.axhline(1.0, color="#333333", linestyle="--", linewidth=1.0)
-    ax.axvline(0.0, color="#333333", linestyle=":", linewidth=1.0)
-    ax.set_xlabel(r"L2 miss reduction vs original (\%)")
-    ax.set_ylabel("Speedup over original")
-    ax.set_title(f"Runtime Benefit vs L2-Miss Reduction ({threads} threads, {label})", fontsize=12)
-    ax.grid(color="#D0D0D0", linestyle=":", linewidth=0.6)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.legend(frameon=False, fontsize=8)
+    axes[0].set_ylabel("Reordered / original cache misses")
+    for ax in axes[1:]:
+        ax.set_ylabel("")
     fig.tight_layout()
-    _save(f"memory_speedup_relation_{label}")
+    _save(f"cache_miss_ratio_summary_{label}")
 
 
 def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
@@ -278,8 +438,8 @@ def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
         logging.warning("Skipping TLB ratio summary for %s; no ratios", label)
         return
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.6), sharey=True)
-    for ax, counter in zip(axes, ["DTLB", "ITLB"]):
+    fig, axes = plt.subplots(1, 2, figsize=(DOUBLE_COLUMN_WIDTH, 2.45), sharey=True)
+    for panel, (ax, counter) in enumerate(zip(axes, ["DTLB", "ITLB"])):
         part = ratios[ratios["counter"] == counter].copy()
         sns.boxplot(
             data=part,
@@ -289,40 +449,23 @@ def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
             order=METHODS,
             hue_order=METHODS,
             palette=METHOD_COLORS,
-            fliersize=0,
-            linewidth=0.8,
+            fliersize=1.8,
+            linewidth=0.75,
+            saturation=0.78,
             dodge=False,
             legend=False,
             ax=ax,
         )
-        sns.stripplot(
-            data=part,
-            x="reordering",
-            y="ratio",
-            hue="reordering",
-            order=METHODS,
-            hue_order=METHODS,
-            palette=METHOD_COLORS,
-            size=3,
-            alpha=0.65,
-            jitter=0.18,
-            linewidth=0,
-            dodge=False,
-            legend=False,
-            ax=ax,
-        )
-        ax.axhline(1.0, color="#333333", linestyle="--", linewidth=1.0)
+        ax.axhline(1.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
         ax.set_yscale("log")
-        ax.set_title(counter, fontsize=10)
-        ax.set_xlabel("Reordering")
+        ax.set_title(f"({chr(97 + panel)}) {counter}")
+        ax.set_xlabel("")
         ax.set_xticks(range(len(METHODS)))
         ax.set_xticklabels([METHOD_LABELS[m] for m in METHODS])
-        ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
-        ax.spines[["top", "right"]].set_visible(False)
+        paper_axes(ax, grid_axis="y")
 
     axes[0].set_ylabel("Reordered / original TLB misses")
     axes[1].set_ylabel("")
-    fig.suptitle(f"TLB Miss Ratio Summary ({label}, 1 thread)", fontsize=12)
     fig.tight_layout()
     _save(f"tlb_ratio_summary_{label}")
 
@@ -363,16 +506,16 @@ def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: p
         logging.warning("Skipping methodology stability for %s; no comparable rows", label)
         return
 
-    fig, ax = plt.subplots(figsize=(5.8, 3.6))
-    ax.axhspan(-5, 5, color="#D9D9D9", alpha=0.45, zorder=0)
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.5))
+    ax.axhspan(-5, 5, color=NEUTRAL_BAND, alpha=0.85, zorder=0)
     sns.boxplot(
         data=long,
         x="methodology",
         y="delta",
         order=available,
-        color="#BDBDBD",
-        fliersize=0,
-        linewidth=0.9,
+        color="#FFFFFF",
+        fliersize=1.8,
+        linewidth=0.75,
         width=0.5,
         ax=ax,
     )
@@ -381,22 +524,17 @@ def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: p
         x="methodology",
         y="delta",
         order=available,
-        hue="category",
         dodge=False,
         jitter=0.18,
-        alpha=0.55,
-        size=2.8,
-        linewidth=0,
+        color="#4A4A4A",
+        alpha=0.42,
+        size=1.9,
+        linewidth=0.2,
         ax=ax,
     )
-    ax.axhline(0.0, color="#333333", linestyle="--", linewidth=1.0)
+    ax.axhline(0.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
     ax.set_xlabel("Measurement methodology")
-    ax.set_ylabel(r"GFLOP/s difference vs repeated Ax (\%)")
-    ax.set_title(f"Measurement Methodology Stability ({threads} threads, {label})", fontsize=12)
-    ax.grid(axis="y", color="#D0D0D0", linestyle=":", linewidth=0.6)
-    ax.spines[["top", "right"]].set_visible(False)
-    handles, labels = ax.get_legend_handles_labels()
-    if handles:
-        ax.legend(handles, labels, title="", frameon=False, fontsize=7, loc="best")
+    ax.set_ylabel(r"Difference from repeated Ax (\%)")
+    paper_axes(ax, grid_axis="y")
     fig.tight_layout()
     _save(f"methodology_stability_{label}")
