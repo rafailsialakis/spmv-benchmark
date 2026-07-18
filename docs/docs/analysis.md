@@ -34,16 +34,10 @@ results/arm_results/
 
 Both platform result directories must contain the CSVs needed by the analysis.
 
-!!! warning "Mixed platform data"
-    Some plots compare x86 and ARM directly. Those plots require both
-    `results/x86_results/` and `results/arm_results/` to be populated with
-    compatible matrix sets. If one platform is missing a matrix, the merge step
-    may drop it from cross-platform comparisons.
-
 !!! note "Missing platform data"
     The analysis pipeline tolerates missing CSVs. If ARM results are not present
-    yet, x86 plots and tables are still generated while ARM-specific and
-    cross-platform outputs are skipped with warnings.
+    yet, x86 plots and tables are still generated while ARM-specific outputs are
+    skipped with warnings.
 
 ## Plot Modules
 
@@ -55,18 +49,11 @@ utils/plotting/
 
 Module responsibilities:
 
-`overview.py`
-: Scalable ECDF and counter summary plots that remain readable for large matrix
-sets.
-
-`barcharts.py`
-: Win/loss summaries and ARM-vs-x86 comparison.
-
 `distributions.py`
-: Runtime, counter, break-even, and structural metric histograms.
+: Speedup and structural compression histogram generation.
 
 `thesis.py`
-: Ranked and grouped thesis figures.
+: Curated figures used by the thesis narrative.
 
 `sparsity.py`
 : Matrix sparsity pattern plots.
@@ -88,8 +75,6 @@ utils/data/io.py
         ▼
 scripts/analysis.py
         │
-        ├── utils/plotting/overview.py
-        ├── utils/plotting/barcharts.py
         ├── utils/plotting/distributions.py
         ├── utils/plotting/thesis.py
         └── utils/plotting/tables.py
@@ -103,9 +88,6 @@ figures/<type>/
 Figures are grouped by output type:
 
 ```text
-figures/barcharts/
-figures/overview/
-figures/distributions/
 figures/thesis/
 figures/sparsity/
 figures/tables/
@@ -114,11 +96,15 @@ figures/tables/
 Examples:
 
 ```text
-figures/barcharts/win_loss_ARM.pdf
-figures/overview/speedup_ecdf_x86.pdf
-figures/distributions/cache_reduction_histogram_x86.pdf
-figures/thesis/best_speedup_ranked_x86.pdf
-figures/tables/scaling_table_ARM.tex
+figures/thesis/category_speedup_distribution_x86.pdf
+figures/thesis/outcome_fraction_bars_x86.pdf
+figures/distributions/speedup_histogram_x86.pdf
+figures/thesis/preprocessing_breakeven_boxplot_x86.pdf
+figures/thesis/best_reordering_agreement.pdf
+figures/thesis/cache_miss_ratio_summary_x86.pdf
+figures/distributions/structural_compression_histogram_x86.pdf
+figures/tables/matrix_characteristics.tex
+figures/tables/thesis_aggregate_table_ARM.tex
 ```
 
 ## Expected CSV Inputs
@@ -127,7 +113,7 @@ figures/tables/scaling_table_ARM.tex
 | --- | --- | --- |
 | `metrics.csv` | `make run-all` | Matrix characteristics and structural compression plots |
 | `reorder_times.csv` | `make run-all` | Break-even tables |
-| `rax.csv` | `make run-all` | Speedup overviews, scaling, win/loss summaries |
+| `rax.csv` | `make run-all` | Speedup distributions, outcome fractions, aggregate tables |
 | `ios.csv` | `make run-all` | Methodology comparison |
 | `cold.csv` | `make run-all` | Methodology and ARM-vs-x86 comparison |
 | `cache.csv` | `make run-all-cache` | Cache miss plots |
