@@ -34,7 +34,7 @@ Additional measurements:
 ```text
 .
 ├── config/                 # Matrix source manifest
-├── docs/                   # MkDocs documentation
+├── docs/                   # Zensical documentation source and output
 ├── figures/                # Generated plots and LaTeX tables
 ├── include/                # C headers
 ├── matrices/               # Downloaded SuiteSparse .mtx files, ignored by git
@@ -52,9 +52,6 @@ bin/
 matrices/
 results/x86_results/
 results/arm_results/
-figures/barcharts/
-figures/overview/
-figures/distributions/
 figures/thesis/
 figures/sparsity/
 figures/tables/
@@ -99,7 +96,7 @@ The analysis scripts use:
 
 ### Documentation
 
-The docs use MkDocs Material:
+The docs use Zensical:
 
 ```bash
 pip install -r docs/requirements.txt
@@ -276,13 +273,15 @@ skipped with warnings.
 Generated outputs:
 
 ```text
-figures/barcharts/
-figures/overview/
-figures/distributions/
 figures/thesis/
+figures/distributions/
 figures/sparsity/
 figures/tables/
 ```
+
+The default plot pipeline is curated for the thesis narrative. Histogram-style
+outputs are limited to speedup and structural compression distributions under
+`figures/distributions/`.
 
 Increase logging verbosity with:
 
@@ -305,13 +304,21 @@ This does not remove downloaded matrices or generated figures.
 Serve the documentation locally:
 
 ```bash
-mkdocs serve -f docs/mkdocs.yml
+cd docs
+zensical serve
 ```
 
 Build the static docs site:
 
 ```bash
-mkdocs build -f docs/mkdocs.yml
+cd docs
+zensical build
+```
+
+From the project root, use:
+
+```bash
+make docs
 ```
 
 ## Notes

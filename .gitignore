@@ -4,6 +4,7 @@ bin/
 matrices/
 /figures/
 
+docs/.cache
 docs/site/
 
 validation/

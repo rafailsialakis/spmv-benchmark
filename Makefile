@@ -47,7 +47,7 @@ BIN2 = $(BIN_DIR)/spmv-benchmark-perm
 BIN3 = $(BIN_DIR)/spmv-benchmark-cache
 BIN4 = $(BIN_DIR)/spmv-benchmark-tlb
 
-.PHONY: all clean run run-perm run-cache run-tlb run-all run-all-cache run-all-tlb plot
+.PHONY: all clean run run-perm run-cache run-tlb run-all run-all-cache run-all-tlb plot docs docs-serve
 
 all: $(BIN1) $(BIN2) $(BIN3) $(BIN4)
 
@@ -117,6 +117,12 @@ download-matrices:
 
 plot:
 	python3 -m scripts.analysis
+
+docs:
+	cd docs && zensical build
+
+docs-serve:
+	cd docs && zensical serve
 
 clean:
 	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4)

@@ -60,9 +60,6 @@ scripts/run_all.sh
 | Matrix files | `matrices/<category>/<matrix>.mtx` |
 | x86 CSVs | `results/x86_results/` |
 | ARM CSVs | `results/arm_results/` |
-| Bar charts | `figures/barcharts/` |
-| Scalable overview plots | `figures/overview/` |
-| Distribution plots | `figures/distributions/` |
 | Thesis figures | `figures/thesis/` |
 | Sparsity plots | `figures/sparsity/` |
 | LaTeX tables | `figures/tables/` |
@@ -72,16 +69,24 @@ scripts/run_all.sh
 Serve these docs locally with:
 
 ```bash
-mkdocs serve -f docs/mkdocs.yml
+cd docs
+zensical serve
 ```
 
 Build the static docs site with:
 
 ```bash
-mkdocs build -f docs/mkdocs.yml
+cd docs
+zensical build
 ```
 
-The documentation uses MkDocs Material. Install the docs dependency with:
+From the project root, use:
+
+```bash
+make docs
+```
+
+The documentation uses Zensical. Install the docs dependency with:
 
 ```bash
 pip install -r docs/requirements.txt
