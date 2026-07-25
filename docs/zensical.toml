@@ -1,9 +1,10 @@
 [project]
-site_name = "SpMxV Benchmark"
-site_description = "Documentation for the sparse matrix-vector multiplication benchmark."
+site_name = "Benchmark Documentation"
+site_description = "Operational documentation for the sparse matrix-vector multiplication benchmark."
 docs_dir = "docs"
 site_dir = "site"
 repo_name = "spmv-benchmark"
+extra_css = ["assets/stylesheets/enterprise.css"]
 
 nav = [
   { "Overview" = [

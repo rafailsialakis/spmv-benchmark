@@ -58,6 +58,10 @@ def generate_plots(df_rax_x86, df_ios_x86, df_cold_x86, df_reorder_x86,
              lambda: thesis.tlb_ratio_summary(df_tlb_x86, "x86"))
     run_step("ARM TLB ratio thesis plot", {"tlb_arm": df_tlb_arm},
              lambda: thesis.tlb_ratio_summary(df_tlb_arm, "ARM"))
+    run_step("x86 methodology fraction thesis plot", {"cold_x86": df_cold_x86, "ios_x86": df_ios_x86, "rax_x86": df_rax_x86},
+             lambda: thesis.methodology_fraction_scatter(df_cold_x86, df_ios_x86, df_rax_x86, "x86"))
+    run_step("ARM methodology fraction thesis plot", {"cold_arm": df_cold_arm, "ios_arm": df_ios_arm, "rax_arm": df_rax_arm},
+             lambda: thesis.methodology_fraction_scatter(df_cold_arm, df_ios_arm, df_rax_arm, "ARM"))
 
 def generate_tables(df_rax_x86, df_ios_x86, df_cold_x86,
                     df_rax_arm, df_ios_arm, df_cold_arm,
@@ -67,10 +71,6 @@ def generate_tables(df_rax_x86, df_ios_x86, df_cold_x86,
                     df_metrics):
     run_step("matrix characteristics table", {"metrics": df_metrics},
              lambda: tables.matrix_characteristics_table(df_metrics))
-    run_step("x86 thesis aggregate table", {"rax_x86": df_rax_x86, "cache_x86": df_cache_x86, "tlb_x86": df_tlb_x86},
-             lambda: tables.thesis_aggregate_table(df_rax_x86, df_cache_x86, df_tlb_x86, "x86"))
-    run_step("ARM thesis aggregate table", {"rax_arm": df_rax_arm, "cache_arm": df_cache_arm, "tlb_arm": df_tlb_arm},
-             lambda: tables.thesis_aggregate_table(df_rax_arm, df_cache_arm, df_tlb_arm, "ARM"))
 
 def main():
     io.init_logging()

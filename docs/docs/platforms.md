@@ -1,11 +1,10 @@
-# Platforms
+# Benchmark Platforms
 
 The project compares x86 and ARM behavior to test whether reordering benefits
-are architecture-dependent.
+are architecture-dependent. Each platform writes into its own result directory
+so benchmark runs can be compared without changing the analysis schema.
 
 ## x86 System
-
-![x86 platform](assets/figures/x86.png)
 
 | Component | Value |
 | --- | --- |
@@ -25,8 +24,6 @@ results/x86_results/
 ```
 
 ## ARM System
-
-![ARM platform](assets/figures/arm.png)
 
 | Component | Value |
 | --- | --- |

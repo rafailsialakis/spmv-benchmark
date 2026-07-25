@@ -1,13 +1,24 @@
-# SpMV Benchmark
+# Benchmark Documentation
 
-This project benchmarks Sparse Matrix-Vector Multiplication (SpMV) on
-SuiteSparse matrices. It evaluates how graph/ordering structure affects the
-memory behavior and end-to-end performance of the SpMV kernel.
+Operational documentation for the Sparse Matrix-Vector Multiplication (SpMV)
+benchmark. The benchmark evaluates how matrix reordering changes runtime,
+memory-system behavior, and preprocessing trade-offs across SuiteSparse matrix
+families.
 
-The benchmark core is written in C. Python is used only for reading result CSVs
-and generating figures/tables.
+The execution core is implemented in C. Python is used for CSV ingestion,
+analysis, figure generation, and table output.
 
-![Memory hierarchy](assets/figures/memory_hierarchy.png)
+<div class="enterprise-summary" markdown>
+
+| Area | Scope |
+| --- | --- |
+| Kernel | CSR SpMV with original and reordered matrices |
+| Reorderings | RCM, AMD, and nested dissection |
+| Measurements | Runtime, GFLOP/s, preprocessing cost, cache misses, TLB misses |
+| Platforms | x86 and ARM result schemas |
+| Outputs | CSV results, benchmark figures, and LaTeX tables |
+
+</div>
 
 ## Goals
 
@@ -27,7 +38,7 @@ It records:
     limited by sparse access patterns, cache reuse, TLB behavior, and memory
     bandwidth rather than floating-point throughput.
 
-## Main Workflow
+## Standard Workflow
 
 Run commands from the project root:
 
@@ -52,7 +63,7 @@ The shortcut script runs the benchmark and plotting pipeline:
 scripts/run_all.sh
 ```
 
-## Output Map
+## Artifact Map
 
 | Artifact | Location |
 | --- | --- |
@@ -60,11 +71,11 @@ scripts/run_all.sh
 | Matrix files | `matrices/<category>/<matrix>.mtx` |
 | x86 CSVs | `results/x86_results/` |
 | ARM CSVs | `results/arm_results/` |
-| Thesis figures | `figures/thesis/` |
+| Benchmark figures | `figures/thesis/` |
 | Sparsity plots | `figures/sparsity/` |
 | LaTeX tables | `figures/tables/` |
 
-## Documentation
+## Local Documentation
 
 Serve these docs locally with:
 

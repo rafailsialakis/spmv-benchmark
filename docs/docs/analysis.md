@@ -1,6 +1,7 @@
-# Analysis Outputs
+# Analysis Pipeline
 
-Python analysis reads benchmark CSV files and writes figures/tables.
+Python analysis reads benchmark CSV files and writes reproducible figures and
+tables for the benchmark report.
 
 Run:
 
@@ -53,7 +54,7 @@ Module responsibilities:
 : Speedup and structural compression histogram generation.
 
 `thesis.py`
-: Curated figures used by the thesis narrative.
+: Curated benchmark figures used by the report narrative.
 
 `sparsity.py`
 : Matrix sparsity pattern plots.
@@ -102,9 +103,9 @@ figures/distributions/speedup_histogram_x86.pdf
 figures/thesis/preprocessing_breakeven_boxplot_x86.pdf
 figures/thesis/best_reordering_agreement.pdf
 figures/thesis/cache_miss_ratio_summary_x86.pdf
+figures/thesis/methodology_fraction_scatter_x86.pdf
 figures/distributions/structural_compression_histogram_x86.pdf
 figures/tables/matrix_characteristics.tex
-figures/tables/thesis_aggregate_table_ARM.tex
 ```
 
 ## Expected CSV Inputs
@@ -112,10 +113,10 @@ figures/tables/thesis_aggregate_table_ARM.tex
 | File | Producer | Main use |
 | --- | --- | --- |
 | `metrics.csv` | `make run-all` | Matrix characteristics and structural compression plots |
-| `reorder_times.csv` | `make run-all` | Break-even tables |
-| `rax.csv` | `make run-all` | Speedup distributions, outcome fractions, aggregate tables |
-| `ios.csv` | `make run-all` | Methodology comparison |
-| `cold.csv` | `make run-all` | Methodology and ARM-vs-x86 comparison |
+| `reorder_times.csv` | `make run-all` | Preprocessing break-even plots |
+| `rax.csv` | `make run-all` | Speedup distributions and outcome fractions |
+| `ios.csv` | `make run-all` | Measurement methodology plots |
+| `cold.csv` | `make run-all` | Measurement methodology plots |
 | `cache.csv` | `make run-all-cache` | Cache miss plots |
 | `tlb.csv` | `make run-all-tlb` | TLB miss plots |
 

@@ -1,8 +1,13 @@
+.pytest_cache/
+.agents
+.cache
+.codex
 .vscode
 
 bin/
 matrices/
-/figures/
+figures/
+__pycache__/
 
 docs/.cache
 docs/site/

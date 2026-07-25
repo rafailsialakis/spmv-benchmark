@@ -1,4 +1,4 @@
-# Methodology
+# Benchmark Methodology
 
 The benchmark measures how reordering changes SpMV behavior. The central
 operation is:
@@ -23,8 +23,6 @@ for row in rows:
 The expensive part is usually not the multiply-add itself. The irregular access
 to `x[col_idx[idx]]` can stress cache and TLB behavior, especially for matrices
 with wide bandwidth or graph-like sparsity.
-
-![Memory gap](assets/figures/mem_gap.png)
 
 ## Reordering Methods
 

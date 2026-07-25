@@ -470,11 +470,17 @@ def tlb_ratio_summary(df_tlb_param: pd.DataFrame, label: str) -> None:
     _save(f"tlb_ratio_summary_{label}")
 
 
-def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: pd.DataFrame, label: str, threads: int = 4) -> None:
-    """Plot GFLOP/s variation across measurement methodologies."""
-    logging.info("Generating thesis methodology stability figure for %s...", label)
+def methodology_fraction_scatter(
+    df_cold: pd.DataFrame,
+    df_ios: pd.DataFrame,
+    df_rax: pd.DataFrame,
+    label: str,
+    threads: int = 4,
+) -> None:
+    """Plot methodology variation as fraction-of-matrices curves."""
+    logging.info("Generating thesis methodology fraction plot for %s...", label)
     frames = []
-    for name, df in [("Cold", df_cold), ("IO-swap", df_ios), ("Repeated Ax", df_rax)]:
+    for name, df in [("Cold", df_cold), ("IO-swap", df_ios), ("RAx", df_rax)]:
         part = df[
             (df["threads"] == threads) &
             (df["reordering"] == "none")
@@ -483,15 +489,15 @@ def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: p
         frames.append(part)
     merged = pd.concat(frames, ignore_index=True)
     pivot = merged.pivot_table(index=["matrix", "category"], columns="methodology", values="gflops")
-    if "Repeated Ax" not in pivot.columns:
-        logging.warning("Skipping methodology stability for %s; missing repeated-Ax baseline", label)
+    if "RAx" not in pivot.columns:
+        logging.warning("Skipping methodology fraction plot for %s; missing RAx baseline", label)
         return
     available = [name for name in ["Cold", "IO-swap"] if name in pivot.columns]
     if not available:
-        logging.warning("Skipping methodology stability for %s; no comparison methodology columns", label)
+        logging.warning("Skipping methodology fraction plot for %s; no comparison methodology columns", label)
         return
 
-    deltas = pivot[available].sub(pivot["Repeated Ax"], axis=0).div(pivot["Repeated Ax"], axis=0) * 100.0
+    deltas = pivot[available].sub(pivot["RAx"], axis=0).div(pivot["RAx"], axis=0) * 100.0
     long = (
         deltas.reset_index()
         .melt(
@@ -503,38 +509,25 @@ def methodology_stability(df_cold: pd.DataFrame, df_ios: pd.DataFrame, df_rax: p
         .dropna()
     )
     if long.empty:
-        logging.warning("Skipping methodology stability for %s; no comparable rows", label)
+        logging.warning("Skipping methodology fraction plot for %s; no comparable rows", label)
         return
 
-    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.5))
-    ax.axhspan(-5, 5, color=NEUTRAL_BAND, alpha=0.85, zorder=0)
-    sns.boxplot(
-        data=long,
-        x="methodology",
-        y="delta",
-        order=available,
-        color="#FFFFFF",
-        fliersize=1.8,
-        linewidth=0.75,
-        width=0.5,
-        ax=ax,
-    )
-    sns.stripplot(
-        data=long,
-        x="methodology",
-        y="delta",
-        order=available,
-        dodge=False,
-        jitter=0.18,
-        color="#4A4A4A",
-        alpha=0.42,
-        size=1.9,
-        linewidth=0.2,
-        ax=ax,
-    )
-    ax.axhline(0.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
-    ax.set_xlabel("Measurement methodology")
-    ax.set_ylabel(r"Difference from repeated Ax (\%)")
-    paper_axes(ax, grid_axis="y")
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.45))
+    ax.axvspan(-5, 5, color=NEUTRAL_BAND, alpha=0.85, zorder=0)
+    colors = {"Cold": "#4A6FA5", "IO-swap": "#9A6B39"}
+    for methodology in available:
+        values = long[long["methodology"] == methodology]["delta"].dropna().sort_values()
+        if values.empty:
+            continue
+        fraction = np.arange(1, len(values) + 1) / len(values)
+        ax.plot(values, fraction, color=colors[methodology], linewidth=1.0, alpha=0.9, label=methodology)
+
+    ax.axvline(0.0, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
+    ax.set_xlabel(r"GFLOP/s difference from RAx (\%)")
+    ax.set_ylabel("Fraction of matrices")
+    ax.set_ylim(0.0, 1.02)
+    ax.set_yticks(np.linspace(0.0, 1.0, 6))
+    ax.legend(loc="lower right", handletextpad=0.3)
+    paper_axes(ax, grid_axis="both")
     fig.tight_layout()
-    _save(f"methodology_stability_{label}")
+    _save(f"methodology_fraction_scatter_{label}")
