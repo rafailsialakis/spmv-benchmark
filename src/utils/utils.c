@@ -107,16 +107,15 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                           struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
                           struct Path* path) {
     int EventSet = PAPI_NULL;
-
-#if defined(__aarch64__)
-    #define NUM_CACHE_EVENTS 2
-    int events[NUM_CACHE_EVENTS] = {PAPI_L1_DCM, PAPI_L2_DCM};
-    const char* cache_header = "matrix,category,reordering,L1_misses,L2_misses";
-#elif defined(__x86_64__)
-    #define NUM_CACHE_EVENTS 3
-    int events[NUM_CACHE_EVENTS] = {PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L3_TCM};
-    const char* cache_header = "matrix,category,reordering,L1_misses,L2_misses,L3_misses";
-#endif
+    #if defined(__aarch64__)
+        #define NUM_CACHE_EVENTS 2
+        int events[NUM_CACHE_EVENTS] = {PAPI_L1_DCM, PAPI_L2_DCM};
+        const char* cache_header = "matrix,category,reordering,L1_misses,L2_misses";
+    #elif defined(__x86_64__)
+        #define NUM_CACHE_EVENTS 3
+        int events[NUM_CACHE_EVENTS] = {PAPI_L1_DCM, PAPI_L2_DCM, PAPI_L3_TCM};
+        const char* cache_header = "matrix,category,reordering,L1_misses,L2_misses,L3_misses";
+    #endif
 
     long long values[NUM_CACHE_EVENTS];
 
@@ -136,11 +135,11 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
     struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_nd};
     const char* reorderings[4]   = {"none", "rcm", "amd", "nd"};
 
-#if defined(__aarch64__)
-    printf("\n%-8s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses");
-#else
-    printf("\n%-8s%-12s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses", "L3_misses");
-#endif
+    #if defined(__aarch64__)
+        printf("\n%-8s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses");
+    #else
+        printf("\n%-8s%-12s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses", "L3_misses");
+    #endif
 
     for (int r = 0; r < 4; r++) {
         memset(y, 0, csr->n * sizeof(double));
@@ -148,20 +147,18 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
         PAPI_start(EventSet);
         spmv_csr(matrices[r], x, y);
         PAPI_stop(EventSet, values);
-
-#if defined(__aarch64__)
-        fprintf(cache_csv, "%s,%s,%s,%lld,%lld\n",
-                path->file, path->folder, reorderings[r],
-                values[0], values[1]);
-        printf("%-8s%-12lld%-12lld\n", reorderings[r], values[0], values[1]);
-#else
-        fprintf(cache_csv, "%s,%s,%s,%lld,%lld,%lld\n",
-                path->file, path->folder, reorderings[r],
-                values[0], values[1], values[2]);
-        printf("%-8s%-12lld%-12lld%-12lld\n", reorderings[r], values[0], values[1], values[2]);
-#endif
+        #if defined(__aarch64__)
+            fprintf(cache_csv, "%s,%s,%s,%lld,%lld\n",
+                    path->file, path->folder, reorderings[r],
+                    values[0], values[1]);
+            printf("%-8s%-12lld%-12lld\n", reorderings[r], values[0], values[1]);
+        #else
+            fprintf(cache_csv, "%s,%s,%s,%lld,%lld,%lld\n",
+                    path->file, path->folder, reorderings[r],
+                    values[0], values[1], values[2]);
+            printf("%-8s%-12lld%-12lld%-12lld\n", reorderings[r], values[0], values[1], values[2]);
+        #endif
     }
-
     PAPI_cleanup_eventset(EventSet);
     PAPI_destroy_eventset(&EventSet);
     fclose(cache_csv);
