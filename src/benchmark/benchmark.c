@@ -8,10 +8,9 @@ double compute_gflops(int nnz, double time_sec) {
 }
 
 void flush_cache() {
-    size_t size = 16 * 1024 * 1024;
-    volatile char* buffer = (volatile char*) malloc(size);
+    volatile char* buffer = (volatile char*) malloc(FLUSH_BYTES);
     if (!buffer) return;
-    for (size_t i = 0; i < size; i += 64)
+    for (size_t i = 0; i < FLUSH_BYTES; i += 64)
         buffer[i] = (char)i;
     free((void*)buffer);
 }

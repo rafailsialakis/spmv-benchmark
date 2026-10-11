@@ -7,6 +7,12 @@
 #define    N_RUNS 100
 #define    WARMUP_RUNS 5
 
+#if defined(__aarch64__)
+    #define FLUSH_BYTES (64UL * 1024 * 1024)
+#elif defined(__x86_64__)
+    #define FLUSH_BYTES (16UL * 1024 * 1024)
+#endif
+
 /* Represents the result of a Benchmark: 
  * 
  * Fields:
