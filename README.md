@@ -11,9 +11,16 @@ generating plots/tables.
 
 Reordering methods:
 
-- Reverse Cuthill-McKee (RCM)
-- Approximate Minimum Degree (AMD)
-- Nested Dissection (ND)
+- Reverse Cuthill-McKee (RCM), via `genrcm` from `third-party/rcm`
+  (J. Burkardt, MIT license)
+- Approximate Minimum Degree (AMD), via CXSparse
+- Nested Dissection (ND), via Scotch
+- Graph Partitioning (GP), Scotch k-way partitioning into 4 parts with rows
+  grouped by part
+
+ND and GP run in a deterministic Scotch context with a fixed seed, so the
+permutations are identical across runs. After permutation, the column indices
+in every row are sorted in ascending order, as in the original matrix.
 
 Measurement methods:
 
@@ -66,14 +73,14 @@ The Makefile expects:
 - GCC
 - OpenMP
 - CXSparse / SuiteSparse
-- Scotch METIS compatibility headers and libraries
+- Scotch (7.x, for its deterministic context option)
 - PAPI
 - standard math library
 
 The current link flags are:
 
 ```make
--lcxsparse -lscotchmetisv5 -lscotcherr -lm -lpapi
+-lcxsparse -lscotch -lscotcherr -lm -lpapi
 ```
 
 The Makefile also includes Scotch headers from:
@@ -84,6 +91,10 @@ The Makefile also includes Scotch headers from:
 
 Adjust `CFLAGS`/`LDFLAGS` in `Makefile` if your system installs these libraries
 elsewhere.
+
+The Makefile exports `OMP_PROC_BIND=close`, `OMP_PLACES=cores` and
+`OMP_DISPLAY_ENV=true` to every target, so each run pins threads to physical
+cores and prints the OpenMP settings it used.
 
 ### Python Analysis
 

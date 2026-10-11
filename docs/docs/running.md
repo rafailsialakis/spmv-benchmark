@@ -14,7 +14,7 @@ The C benchmark expects:
 - GCC
 - OpenMP
 - CXSparse / SuiteSparse headers and libraries
-- Scotch METIS compatibility library
+- Scotch 7.x library
 - PAPI
 - math library
 

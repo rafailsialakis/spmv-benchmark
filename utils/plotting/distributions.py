@@ -15,9 +15,9 @@ from utils.plotting.common import (
 )
 
 
-METHODS = ["rcm", "amd", "nd"]
-METHOD_LABELS = {"rcm": "RCM", "amd": "AMD", "nd": "ND"}
-METHOD_COLORS = {"rcm": "#3B6EA8", "amd": "#B45F2A", "nd": "#3D8B62"}
+METHODS = ["rcm", "amd", "nd", "gp"]
+METHOD_LABELS = {"rcm": "RCM", "amd": "AMD", "nd": "ND", "gp": "GP"}
+METHOD_COLORS = {"rcm": "#3B6EA8", "amd": "#B45F2A", "nd": "#3D8B62", "gp": "#7A4E9C"}
 
 
 def _save(stem: str) -> None:
@@ -65,7 +65,7 @@ def speedup_histogram(df_param: pd.DataFrame, label: str, threads: int = 4) -> N
     upper = max(1.6, np.ceil(speedups["speedup"].max() * 10.0) / 10.0)
     bins = np.linspace(lower, upper, 18)
 
-    fig, axes = plt.subplots(1, 3, figsize=(DOUBLE_COLUMN_WIDTH, 2.35), sharey=True)
+    fig, axes = plt.subplots(1, len(METHODS), figsize=(DOUBLE_COLUMN_WIDTH, 2.35), sharey=True)
     for ax, method in zip(axes, METHODS):
         vals = speedups[speedups["reordering"] == method]["speedup"]
         ax.axvspan(0.95, 1.05, color=NEUTRAL_BAND, alpha=0.9, zorder=0)
