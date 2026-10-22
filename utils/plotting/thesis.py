@@ -340,6 +340,70 @@ def best_reordering_agreement(
     _save("best_reordering_agreement")
 
 
+def best_reordering_portability(
+    df_x86_param: pd.DataFrame,
+    df_arm_param: pd.DataFrame,
+    threads: int = 4,
+) -> None:
+    """Plot how much performance is retained when the best method of one
+    platform is applied on the other, in both directions.
+
+    For each matrix, the retained performance is the speedup obtained by the
+    transferred method divided by the best speedup achievable on the target
+    platform (1.0 means the transferred choice was optimal).
+    """
+    logging.info("Generating thesis best-reordering portability plot...")
+    x86 = _speedup_long(df_x86_param, threads).rename(columns={"speedup": "x86_speedup"})
+    arm = _speedup_long(df_arm_param, threads).rename(columns={"speedup": "arm_speedup"})
+    paired = x86.merge(arm, on=["matrix", "category", "reordering"], how="inner")
+    if paired.empty:
+        logging.warning("Skipping best-reordering portability plot; no paired rows")
+        return
+
+    wide = paired.pivot_table(
+        index=["matrix", "category"],
+        columns="reordering",
+        values=["x86_speedup", "arm_speedup"],
+    )
+    x86_s, arm_s = wide["x86_speedup"], wide["arm_speedup"]
+    best_x86, best_arm = x86_s.idxmax(axis=1), arm_s.idxmax(axis=1)
+
+    # x86 choice evaluated on ARM, and ARM choice evaluated on x86.
+    x86_to_arm = pd.Series(
+        [arm_s.loc[idx, m] for idx, m in best_x86.items()], index=wide.index
+    ) / arm_s.max(axis=1)
+    arm_to_x86 = pd.Series(
+        [x86_s.loc[idx, m] for idx, m in best_arm.items()], index=wide.index
+    ) / x86_s.max(axis=1)
+
+    series = [
+        (r"x86$\to$ARM", x86_to_arm, "#4A6FA5"),
+        (r"ARM$\to$x86", arm_to_x86, "#9A6B39"),
+    ]
+    all_vals = pd.concat([s for _, s, _ in series])
+    x_min = min(0.8, np.floor(all_vals.min() * 20.0) / 20.0)
+
+    fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.45))
+    ax.axvspan(0.95, 1.0, color=NEUTRAL_BAND, alpha=0.85, zorder=0)
+    for name, vals, color in series:
+        vals = vals.dropna().sort_values()
+        within = float((vals >= 0.95).mean())
+        logging.info("Portability %s: within 5%% for %.1f%% (%d/%d)",
+                     name, within * 100.0, int((vals >= 0.95).sum()), len(vals))
+        frac = np.arange(1, len(vals) + 1) / len(vals)
+        ax.step(vals, frac, where="post", color=color, linewidth=1.1,
+                label=rf"{name}: {within * 100.0:.1f}\%")
+    ax.axvline(0.95, color=REFERENCE_COLOR, linestyle="--", linewidth=0.8)
+    ax.set_xlim(x_min, 1.01)
+    ax.set_ylim(0.0, 1.02)
+    ax.set_xlabel("Retained performance (transferred / best)")
+    ax.set_ylabel("Fraction of matrices")
+    ax.legend(loc="upper left", handletextpad=0.4, title=r"Within 5\% of best", title_fontsize=6.5)
+    paper_axes(ax, grid_axis="both")
+    fig.tight_layout()
+    _save("best_reordering_portability")
+
+
 def cache_miss_ratio_summary(df_cache_param: pd.DataFrame, label: str) -> None:
     """Plot reordered-to-original cache miss ratios by cache level."""
     logging.info("Generating thesis cache miss ratio summary for %s...", label)
