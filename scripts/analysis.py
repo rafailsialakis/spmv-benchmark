@@ -48,6 +48,8 @@ def generate_plots(df_rax_x86, df_ios_x86, df_cold_x86, df_reorder_x86,
              lambda: thesis.preprocessing_breakeven_boxplot(df_rax_arm, df_reorder_arm, "ARM"))
     run_step("x86/ARM best-reordering agreement thesis plot", {"rax_x86": df_rax_x86, "rax_arm": df_rax_arm},
              lambda: thesis.best_reordering_agreement(df_rax_x86, df_rax_arm))
+    run_step("x86/ARM best-reordering portability thesis plot", {"rax_x86": df_rax_x86, "rax_arm": df_rax_arm},
+             lambda: thesis.best_reordering_portability(df_rax_x86, df_rax_arm))
     run_step("x86 cache ratio thesis plot", {"cache_x86": df_cache_x86},
              lambda: thesis.cache_miss_ratio_summary(df_cache_x86, "x86"))
     run_step("ARM cache ratio thesis plot", {"cache_arm": df_cache_arm},
