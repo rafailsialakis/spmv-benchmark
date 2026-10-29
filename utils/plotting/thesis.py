@@ -294,6 +294,20 @@ def best_reordering_agreement(
     ]
     practical = (best["arm_using_x86_choice"] >= 0.95 * best["arm_best"]).mean()
 
+    # Reverse direction: use the ARM-best method on x86.
+    x86_speedups = wide["x86_speedup"]
+    best["x86_best"] = x86_speedups.max(axis=1)
+    best["x86_using_arm_choice"] = [
+        x86_speedups.loc[idx, method] for idx, method in best["arm"].items()
+    ]
+    practical_reverse = (best["x86_using_arm_choice"] >= 0.95 * best["x86_best"]).mean()
+    logging.info(
+        "Portability within 5%%: x86->ARM %.1f%% (%d/%d), ARM->x86 %.1f%% (%d/%d)",
+        practical * 100.0, int(round(practical * len(best))), len(best),
+        practical_reverse * 100.0, int(round(practical_reverse * len(best))), len(best),
+    )
+    print(f"x86->ARM: {practical:.3f}  ARM->x86: {practical_reverse:.3f}")
+
     counts = pd.crosstab(best["x86"], best["arm"]).reindex(index=METHODS, columns=METHODS, fill_value=0)
     fig, ax = plt.subplots(figsize=(SINGLE_COLUMN_WIDTH, 2.7))
     sns.heatmap(
