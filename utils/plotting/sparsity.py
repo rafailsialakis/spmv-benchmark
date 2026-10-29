@@ -5,6 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 from scipy.io import mmread
 
 from utils.plotting.common import DOUBLE_COLUMN_WIDTH, paper_axes, save_figure
@@ -18,27 +19,32 @@ def sparse_plot(path: str) -> None:
     perm_rcm = np.loadtxt("validation/rcm.txt", dtype=int)
     perm_amd = np.loadtxt("validation/amd.txt", dtype=int)
     perm_nd = np.loadtxt("validation/nd.txt", dtype=int)
+    perm_gp = np.loadtxt("validation/gp.txt", dtype=int)
     logging.info("Permutations parsed successfully!")
 
     B = A[perm_rcm, :][:, perm_rcm]
     C = A[perm_amd, :][:, perm_amd]
     D = A[perm_nd, :][:, perm_nd]
+    E = A[perm_gp, :][:, perm_gp]
     logging.info("Matrices permuted successfully!")
 
     logging.info("Plotting...")
-    fig, axes = plt.subplots(2, 2, figsize=(DOUBLE_COLUMN_WIDTH, DOUBLE_COLUMN_WIDTH))
+    fig, axes = plt.subplots(2, 3, figsize=(DOUBLE_COLUMN_WIDTH, DOUBLE_COLUMN_WIDTH * 2 / 3))
 
     for ax, matrix, title in zip(
         axes.flat,
-        [A, B, C, D],
-        ["Original", "RCM", "AMD", "ND"],
+        [A, B, C, D, E],
+        ["Original", "RCM", "AMD", "ND", "GP"],
     ):
         ax.spy(matrix, markersize=0.08, rasterized=True)
         ax.set_title(title)
         ax.set_xlabel("")
         ax.set_ylabel("")
+        ax.xaxis.set_major_locator(MaxNLocator(3))
+        ax.yaxis.set_major_locator(MaxNLocator(3))
         paper_axes(ax, grid_axis=None)
 
+    axes.flat[-1].set_axis_off()
     fig.tight_layout(pad=0.35)
 
     name = Path(path).stem

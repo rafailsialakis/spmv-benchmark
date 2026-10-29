@@ -27,24 +27,26 @@ static void ensure_results_dir(void) {
 
 void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                             struct Path* path) {
+                             struct CSRMatrix* csr_gp, struct Path* path) {
     FILE* metrics_csv = open_csv(
         RESULTS_DIR "/metrics.csv",
         "matrix,category,n,nnz,avg_nnz_row,std_nnz_row,"
-        "bw,rcm_bw,amd_bw,nd_bw,"
-        "avg_bw,avg_rcm_bw,avg_amd_bw,avg_nd_bw,"
-        "lb,rcm_lb,amd_lb,nd_lb,density"
+        "bw,rcm_bw,amd_bw,nd_bw,gp_bw,"
+        "avg_bw,avg_rcm_bw,avg_amd_bw,avg_nd_bw,avg_gp_bw,"
+        "lb,rcm_lb,amd_lb,nd_lb,gp_lb,density"
     );
 
     struct BWResult bw     = compute_bandwidth(csr);
     struct BWResult bw_rcm = compute_bandwidth(csr_rcm);
     struct BWResult bw_amd = compute_bandwidth(csr_amd);
     struct BWResult bw_nd  = compute_bandwidth(csr_nd);
+    struct BWResult bw_gp  = compute_bandwidth(csr_gp);
 
     double lb     = compute_imbalance_ratio(csr,     MAX_NUM_THREADS);
     double lb_rcm = compute_imbalance_ratio(csr_rcm, MAX_NUM_THREADS);
     double lb_amd = compute_imbalance_ratio(csr_amd, MAX_NUM_THREADS);
     double lb_nd  = compute_imbalance_ratio(csr_nd,  MAX_NUM_THREADS);
+    double lb_gp  = compute_imbalance_ratio(csr_gp,  MAX_NUM_THREADS);
 
     double avg_nnz = avg_nnz_row(csr);
     double std_nnz = std_nnz_row(csr);
@@ -52,20 +54,20 @@ void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
     fprintf(metrics_csv,
         "%s,%s,%d,%d,%.2f,%.2f,"
-        "%d,%d,%d,%d,"
-        "%.2f,%.2f,%.2f,%.2f,"
-        "%.2f,%.2f,%.2f,%.2f,%e\n",
+        "%d,%d,%d,%d,%d,"
+        "%.2f,%.2f,%.2f,%.2f,%.2f,"
+        "%.2f,%.2f,%.2f,%.2f,%.2f,%e\n",
         path->file, path->folder, csr->n, csr->nnz, avg_nnz, std_nnz,
-        bw.max_bw, bw_rcm.max_bw, bw_amd.max_bw, bw_nd.max_bw,
-        bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_nd.avg_bw,
-        lb, lb_rcm, lb_amd, lb_nd, density
+        bw.max_bw, bw_rcm.max_bw, bw_amd.max_bw, bw_nd.max_bw, bw_gp.max_bw,
+        bw.avg_bw, bw_rcm.avg_bw, bw_amd.avg_bw, bw_nd.avg_bw, bw_gp.avg_bw,
+        lb, lb_rcm, lb_amd, lb_nd, lb_gp, density
     );
     fclose(metrics_csv);
 }
 
 void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                         struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                        struct Path* path) {
+                        struct CSRMatrix* csr_gp, struct Path* path) {
     double* x = malloc(csr->n * sizeof(double));
     double* y = malloc(csr->n * sizeof(double));
     for (int i = 0; i < csr->n; i++) x[i] = 1.0;
@@ -74,25 +76,25 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
     FILE* ios_csv  = open_csv(RESULTS_DIR "/ios.csv",  "matrix,category,reordering,threads,gflops,time_ms");
     FILE* cold_csv = open_csv(RESULTS_DIR "/cold.csv", "matrix,category,reordering,threads,gflops,time_ms");
 
-    struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_nd};
-    const char* reorderings[4]   = {"none", "rcm", "amd", "nd"};
+    struct CSRMatrix* matrices[N_REORDERINGS] = {csr, csr_rcm, csr_amd, csr_nd, csr_gp};
+    const char* reorderings[N_REORDERINGS]   = {"none", "rcm", "amd", "nd", "gp"};
     int thread_counts[3]         = {1, 2, 4};
 
     for (int ti = 0; ti < 3; ti++) {
         int threads = thread_counts[ti];
         omp_set_num_threads(threads);
-        BenchResult rax[4], ios[4], cold[4];
+        BenchResult rax[N_REORDERINGS], ios[N_REORDERINGS], cold[N_REORDERINGS];
 
         printf("\nThreads: %d\n", threads);
         printf("%s\t%s\t%s\t%s\n", "Method", "Reorder", "T(ms)", "GFLOP/s");
 
-        for (int r = 0; r < 4; r++) {
+        for (int r = 0; r < N_REORDERINGS; r++) {
             rax[r]  = run_benchmark_rax( reorderings[r], matrices[r], x, y);
             ios[r]  = run_benchmark_ios( reorderings[r], matrices[r], x, y);
             cold[r] = run_benchmark_cold(reorderings[r], matrices[r], x, y);
         }
 
-        for (int r = 0; r < 4; r++) {
+        for (int r = 0; r < N_REORDERINGS; r++) {
             fprintf(rax_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, rax[r].gflops,  rax[r].time_ms);
             fprintf(ios_csv,  "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, ios[r].gflops,  ios[r].time_ms);
             fprintf(cold_csv, "%s,%s,%s,%d,%.4f,%.3f\n", path->file, path->folder, reorderings[r], threads, cold[r].gflops, cold[r].time_ms);
@@ -105,7 +107,7 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
 void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                           struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                          struct Path* path) {
+                          struct CSRMatrix* csr_gp, struct Path* path) {
     int EventSet = PAPI_NULL;
     #if defined(__aarch64__)
         #define NUM_CACHE_EVENTS 2
@@ -132,8 +134,8 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
     FILE* cache_csv = open_csv(RESULTS_DIR "/cache.csv", cache_header);
 
-    struct CSRMatrix* matrices[4] = {csr, csr_rcm, csr_amd, csr_nd};
-    const char* reorderings[4]   = {"none", "rcm", "amd", "nd"};
+    struct CSRMatrix* matrices[N_REORDERINGS] = {csr, csr_rcm, csr_amd, csr_nd, csr_gp};
+    const char* reorderings[N_REORDERINGS]   = {"none", "rcm", "amd", "nd", "gp"};
 
     #if defined(__aarch64__)
         printf("\n%-8s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses");
@@ -141,7 +143,7 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
         printf("\n%-8s%-12s%-12s%-12s\n", "Reorder", "L1_misses", "L2_misses", "L3_misses");
     #endif
 
-    for (int r = 0; r < 4; r++) {
+    for (int r = 0; r < N_REORDERINGS; r++) {
         memset(y, 0, csr->n * sizeof(double));
         PAPI_reset(EventSet);
         PAPI_start(EventSet);
@@ -167,7 +169,7 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
 void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                          struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                         struct Path* path) {
+                         struct CSRMatrix* csr_gp, struct Path* path) {
 
     if (PAPI_library_init(PAPI_VER_CURRENT) != PAPI_VER_CURRENT) {
         fprintf(stderr, "PAPI init error (TLB)\n");
@@ -201,15 +203,15 @@ void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
         "matrix,category,reordering,dtlb_load_misses,itlb_load_misses"
     );
 
-    struct CSRMatrix* matrices[4]   = {csr, csr_rcm, csr_amd, csr_nd};
-    const char*       reorderings[4] = {"none", "rcm", "amd", "nd"};
+    struct CSRMatrix* matrices[N_REORDERINGS]   = {csr, csr_rcm, csr_amd, csr_nd, csr_gp};
+    const char*       reorderings[N_REORDERINGS] = {"none", "rcm", "amd", "nd", "gp"};
 
     printf("\n%-8s  %-20s  %-20s\n",
            "Reorder", "DTLB-load-misses", "ITLB-load-misses");
 
     long long values[2];
 
-    for (int r = 0; r < 4; r++) {
+    for (int r = 0; r < N_REORDERINGS; r++) {
         memset(y, 0, csr->n * sizeof(double));
 
         PAPI_reset(EventSet);
@@ -233,10 +235,12 @@ void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
 
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-             struct Permutations* perm, struct Path* path) {
+             struct CSRMatrix* csr_gp, struct Permutations* perm, struct Path* path) {
     csr_free(csr);     csr_free(csr_rcm);
     csr_free(csr_amd); csr_free(csr_nd);
+    csr_free(csr_gp);
     free(perm->rcm_perm); free(perm->amd_perm); free(perm->nd_perm);
+    free(perm->gp_perm);
     free(perm);
     free((void*)path->file); free((void*)path->folder);
     free(path);
@@ -261,11 +265,13 @@ void export_permutations(struct CSRMatrix* csr, struct Permutations* perm) {
     FILE* rcm_file = fopen("validation/rcm.txt", "w");
     FILE* amd_file = fopen("validation/amd.txt", "w");
     FILE* nd_file  = fopen("validation/nd.txt",  "w");
+    FILE* gp_file  = fopen("validation/gp.txt",  "w");
 
     for (int i = 0; i < csr->n; i++) {
         fprintf(rcm_file, "%d\n", perm->rcm_perm[i]);
         fprintf(amd_file, "%d\n", perm->amd_perm[i]);
         fprintf(nd_file,  "%d\n", perm->nd_perm[i]);
+        fprintf(gp_file,  "%d\n", perm->gp_perm[i]);
     }
     puts("Permutations saved successfully!");
     exit(EXIT_SUCCESS);
@@ -308,6 +314,10 @@ struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* nam
     p->nd_perm = compute_permutation_nd(csr);
     if (reorder_csv) fprintf(reorder_csv, "%s,nd,%.4f\n", name, get_time() - t);
 
+    t = get_time();
+    p->gp_perm = compute_permutation_gp(csr);
+    if (reorder_csv) fprintf(reorder_csv, "%s,gp,%.4f\n", name, get_time() - t);
+
     if (reorder_csv) fclose(reorder_csv);
     return p;
 }
@@ -328,14 +338,19 @@ void assert_permutation_correct(struct CSRMatrix* original, struct CSRMatrix* re
     spmv_csr(reordered, px, y_reord);            // y' = A'x'
     for (int i = 0; i < n; i++) y_back[p[i]] = y_reord[i]; // y_back = P^T y'
 
+    // Reordering changes the summation order, so rounding differences scale with
+    // the magnitude of the row terms: compare against sum_j |a_ij * x_j| per row.
     double max_err = 0.0;
     for (int i = 0; i < n; i++) {
-        double err = fabs(y_orig[i] - y_back[i]);
+        double scale = 0.0;
+        for (int k = original->row_ptr[i]; k < original->row_ptr[i + 1]; k++)
+            scale += fabs(original->values[k] * x[original->col_idx[k]]);
+        double err = fabs(y_orig[i] - y_back[i]) / (scale > 0.0 ? scale : 1.0);
         if (err > max_err) max_err = err;
     }
 
-    if (max_err > 1e-10) {
-        fprintf(stderr, "CORRECTNESS FAIL [%s]: max_err = %e\n", label, max_err);
+    if (max_err > 1e-12) {
+        fprintf(stderr, "CORRECTNESS FAIL [%s]: max_rel_err = %e\n", label, max_err);
         exit(EXIT_FAILURE);
     }
     free(x); free(px); free(y_orig); free(y_reord); free(y_back);

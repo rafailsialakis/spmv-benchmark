@@ -13,7 +13,7 @@ analysis, figure generation, and table output.
 | Area | Scope |
 | --- | --- |
 | Kernel | CSR SpMV with original and reordered matrices |
-| Reorderings | RCM, AMD, and nested dissection |
+| Reorderings | RCM, AMD, nested dissection, and graph partitioning |
 | Measurements | Runtime, GFLOP/s, preprocessing cost, cache misses, TLB misses |
 | Platforms | x86 and ARM result schemas |
 | Outputs | CSV results, benchmark figures, and LaTeX tables |
@@ -28,7 +28,7 @@ matrix reordering improve SpMV enough to matter?
 It records:
 
 - SpMV runtime and GFLOP/s across measurement methodologies.
-- Reordering cost for RCM, AMD, and ND.
+- Reordering cost for RCM, AMD, ND, and GP.
 - Structural matrix metrics such as bandwidth, density, and load imbalance.
 - Cache and TLB counter behavior through PAPI.
 - Cross-platform behavior on x86 and ARM systems.
