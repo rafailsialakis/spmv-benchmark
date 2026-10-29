@@ -15,6 +15,7 @@
 #endif
 
 #define MAX_NUM_THREADS 4
+#define N_REORDERINGS   5   // none, rcm, amd, nd, gp
 
 /*
  * Specifies the path of the *.mtx file. The path is: matrices/<field>/<matrix_file>
@@ -36,11 +37,13 @@ struct Path {
  *     rcm_perm (int*): Permutation vector for RCM
  *     amd_perm (int*): Permutation vector for AMD
  *     nd_perm  (int*): Permutation vector for METIS (ND)
+ *     gp_perm  (int*): Permutation vector for METIS k-way partitioning (GP)
  */
 struct Permutations {
     int* rcm_perm;
     int* amd_perm;
     int* nd_perm;
+    int* gp_perm;
 };
 
 /*
@@ -112,7 +115,7 @@ struct Path* split_path(char* arg);
 struct CSRMatrix* read_matrix(char* path);
 
 /*
- * Computes permutation vectors for RCM, AMD and METIS (ND).
+ * Computes permutation vectors for RCM, AMD, METIS (ND) and METIS k-way (GP).
  * Also records reordering times in RESULTS_DIR/reorder_times.csv.
  *
  * Args:
@@ -135,11 +138,12 @@ struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* nam
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
  *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
+ *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
  *     path    (struct Path*):      Pointer to the path struct
  */
 void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                             struct Path* path);
+                             struct CSRMatrix* csr_gp, struct Path* path);
 
 /*
  * Runs RAx, IOs and Cold Cache benchmarks for all reorderings,
@@ -150,11 +154,12 @@ void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
  *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
+ *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
  *     path    (struct Path*):      Pointer to the path struct
  */
 void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                         struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                        struct Path* path);
+                        struct CSRMatrix* csr_gp, struct Path* path);
 
 /*
  * Runs cache miss benchmarks (L1, L2, and L3 on x86 only) sequentially
@@ -165,11 +170,12 @@ void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
  *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
+ *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
  *     path    (struct Path*):      Pointer to the path struct
  */
 void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                           struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                          struct Path* path);
+                          struct CSRMatrix* csr_gp, struct Path* path);
 
 /*
  * Runs TLB benchmarks (DTLB loads, DTLB load misses, ITLB load misses)
@@ -186,11 +192,12 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
  *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
  *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
  *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
+ *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
  *     path    (struct Path*):      Pointer to the path struct
  */
 void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
                          struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                         struct Path* path);
+                         struct CSRMatrix* csr_gp, struct Path* path);
 
 /*
  * Frees all dynamically allocated memory (matrices, permutations, path).
@@ -200,11 +207,12 @@ void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
  *     csr_rcm (struct CSRMatrix*):  Pointer to the RCM-reordered matrix
  *     csr_amd (struct CSRMatrix*):  Pointer to the AMD-reordered matrix
  *     csr_nd  (struct CSRMatrix*):  Pointer to the ND-reordered matrix
+ *     csr_gp  (struct CSRMatrix*):  Pointer to the GP-reordered matrix
  *     perm    (struct Permutations*): Pointer to the permutation vectors
  *     path    (struct Path*):        Pointer to the path struct
  */
 void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
              struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-             struct Permutations* perm, struct Path* path);
+             struct CSRMatrix* csr_gp, struct Permutations* perm, struct Path* path);
 
 #endif

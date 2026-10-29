@@ -17,9 +17,9 @@ from utils.plotting.common import (
 )
 
 
-METHODS = ["rcm", "amd", "nd"]
-METHOD_LABELS = {"rcm": "RCM", "amd": "AMD", "nd": "ND"}
-METHOD_COLORS = {"rcm": "#3B6EA8", "amd": "#B45F2A", "nd": "#3D8B62"}
+METHODS = ["rcm", "amd", "nd", "gp"]
+METHOD_LABELS = {"rcm": "RCM", "amd": "AMD", "nd": "ND", "gp": "GP"}
+METHOD_COLORS = {"rcm": "#3B6EA8", "amd": "#B45F2A", "nd": "#3D8B62", "gp": "#7A4E9C"}
 OUTCOME_COLORS = {
     "Improved": "#4C8C5A",
     "Neutral": "#D8D8D8",
@@ -175,9 +175,9 @@ def category_speedup_distribution(df_param: pd.DataFrame, label: str, threads: i
 
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(
-        handles[:3],
+        handles[:len(METHODS)],
         [METHOD_LABELS[m] for m in METHODS],
-        ncol=3,
+        ncol=len(METHODS),
         loc="upper center",
         bbox_to_anchor=(0.5, 1.12),
         handlelength=1.3,

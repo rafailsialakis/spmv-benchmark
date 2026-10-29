@@ -2,8 +2,13 @@ CC      = gcc
 
 CFLAGS  = -O3 -Wall -Iinclude -Wunused -fopenmp -Wno-unused-result
 CFLAGS += -I/usr/include/scotch
+CFLAGS += -Ithird-party/rcm
+LDFLAGS = -lcxsparse -lscotch -lscotcherr -lm -lpapi
 
-LDFLAGS = -lcxsparse -lscotchmetisv5 -lscotcherr -lm -lpapi
+# OpenMP thread pinning (must be in the environment before the program starts)
+export OMP_PROC_BIND   = close
+export OMP_PLACES      = cores
+export OMP_DISPLAY_ENV = true
 
 # Directories
 SRC_DIR = src
@@ -23,9 +28,9 @@ MATRIX_SRC   = $(SRC_DIR)/matrix/coo.c \
                $(SRC_DIR)/matrix/parser.c
 
 SPMV_SRC     = $(SRC_DIR)/spmv/spmv.c
-REORDER_SRC  = $(SRC_DIR)/reorder/reorder.c
-UTILS_SRC    = $(SRC_DIR)/utils/utils.c \
-               $(SRC_DIR)/utils/queue.c
+REORDER_SRC  = $(SRC_DIR)/reorder/reorder.c \
+               third-party/rcm/rcm.c
+UTILS_SRC    = $(SRC_DIR)/utils/utils.c
 
 BENCH_SRC    = $(SRC_DIR)/benchmark/benchmark.c \
                $(SRC_DIR)/benchmark/metrics.c \
