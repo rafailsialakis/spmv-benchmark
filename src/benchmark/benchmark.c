@@ -1,3 +1,5 @@
+#include <math.h>
+#include <omp.h>
 #include "spmv/spmv.h"
 #include "matrix/csr.h"
 #include "benchmark/timer.h"
@@ -9,10 +11,24 @@ double compute_gflops(int nnz, double time_sec) {
 
 void flush_cache() {
     volatile char* buffer = (volatile char*) malloc(FLUSH_BYTES);
-    if (!buffer) return;
+    if (!buffer) {
+        fprintf(stderr, "flush_cache: allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    // Same static schedule and thread count as the kernel that follows.
+    #pragma omp parallel for schedule(static)
     for (size_t i = 0; i < FLUSH_BYTES; i += 64)
         buffer[i] = (char)i;
     free((void*)buffer);
+}
+
+int count_nonnormal(const double* v, int n) {
+    int bad = 0;
+    for (int j = 0; j < n; j++) {
+        int c = fpclassify(v[j]);
+        bad += (c == FP_SUBNORMAL || c == FP_INFINITE || c == FP_NAN);
+    }
+    return bad;
 }
 
 static double median(double* arr, int n) {
@@ -41,7 +57,8 @@ BenchResult run_benchmark_cold(const char* label, struct CSRMatrix* csr, double*
     BenchResult r;
     r.time_ms = time * 1000.0;
     r.gflops  = compute_gflops(csr->nnz, time);
-    printf("%s\t%s\t%.3f\t%.2f\n", "COLD", label, r.time_ms, r.gflops);
+    r.nonnormal = -1;
+    printf("%s\t%s\t%.6f\t%.4f\n", "COLD", label, r.time_ms, r.gflops);
     return r;
 }
 
@@ -61,7 +78,8 @@ BenchResult run_benchmark_rax(const char* label, struct CSRMatrix* csr,
     BenchResult r;
     r.time_ms = t * 1000.0;
     r.gflops  = compute_gflops(csr->nnz, t);
-    printf("%s\t%s\t%.3f\t%.2f\n", "RAX", label, r.time_ms, r.gflops);
+    r.nonnormal = -1;
+    printf("%s\t%s\t%.6f\t%.4f\n", "RAX", label, r.time_ms, r.gflops);
     return r;
 }
 
@@ -80,6 +98,11 @@ BenchResult run_benchmark_ios(const char* label, struct CSRMatrix* csr, double* 
     BenchResult r;
     r.time_ms = t * 1000.0;
     r.gflops  = compute_gflops(csr->nnz, t);
-    printf("%s\t%s\t%.3f\t%.2f\n", "IOS", label, r.time_ms, r.gflops);
+    // After the last swap, `in` holds the most recent output vector.
+    r.nonnormal = count_nonnormal(in, csr->n);
+    if (r.nonnormal > 0)
+        fprintf(stderr, "WARNING IOS [%s]: %d subnormal/inf/NaN entries in the final vector\n",
+                label, r.nonnormal);
+    printf("%s\t%s\t%.6f\t%.4f\n", "IOS", label, r.time_ms, r.gflops);
     return r;
 }

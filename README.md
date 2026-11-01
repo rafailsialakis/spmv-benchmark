@@ -14,9 +14,9 @@ Reordering methods:
 - Reverse Cuthill-McKee (RCM), via `genrcm` from `third-party/rcm`
   (J. Burkardt, MIT license)
 - Approximate Minimum Degree (AMD), via CXSparse
-- Nested Dissection (ND), via Scotch
-- Graph Partitioning (GP), Scotch k-way partitioning into 4 parts with rows
-  grouped by part
+- Nested Dissection (ND), via Scotch's native ordering API (default strategy)
+- Graph Partitioning (GP), Scotch k-way partitioning into 4 parts (3% imbalance,
+  unweighted vertices) with rows grouped by part, original order inside a part
 
 ND and GP run in a deterministic Scotch context with a fixed seed, so the
 permutations are identical across runs. After permutation, the column indices
@@ -177,7 +177,20 @@ bin/spmv-benchmark
 bin/spmv-benchmark-perm
 bin/spmv-benchmark-cache
 bin/spmv-benchmark-tlb
+bin/spmv-check
 ```
+
+Before a campaign, check that every matrix has a structurally symmetric pattern
+without duplicate entries (RCM, AMD and Scotch treat the pattern as an
+undirected graph; Scotch nested dissection does not terminate on an
+unsymmetric one):
+
+```bash
+make check-matrices
+```
+
+The benchmark runs the same check on every matrix before computing any ordering
+and stops with an explanation if it fails.
 
 It also creates:
 
@@ -237,6 +250,30 @@ make run-all-cache
 make plot
 ```
 
+## 4b. Paper Campaign (repetitions, shuffled order, stable clock)
+
+Every run of `bin/spmv-benchmark` repeats the whole sweep (1/2/4 threads x five
+matrices) `SPMV_REPS` times (default 5). In each repetition and thread count the
+order of the five matrices (none, rcm, amd, nd, gp) is shuffled with a seeded
+PRNG (`SPMV_SEED`, mixed with the matrix name), so a run is reproducible and no
+method is always measured first or last.
+
+```bash
+sudo scripts/x86_stable_freq.sh        # x86 only: performance governor, turbo off
+scripts/run_paper.sh                   # records the platform, then make run-all
+sudo scripts/x86_stable_freq.sh --restore
+```
+
+`scripts/run_paper.sh` refuses to start on x86 while turbo is enabled
+(`ALLOW_TURBO=1` overrides). Keep the laptop on AC power and close other
+programs. `make platform-info` writes `results/<platform>_results/platform.txt`
+(CPU, kernel, compiler, THP setting, page size, governor, AWS instance type).
+
+The original ordering ("none") is rebuilt through `permute_csr` with the
+identity permutation, so all five matrices are built by the same code
+(fresh allocation, sorted column indices). Every permutation is checked to be a
+bijection and every reordered matrix is checked against the original product.
+
 ## 5. Result CSVs
 
 The benchmark writes to a platform-specific directory selected at compile time:
@@ -257,6 +294,23 @@ cold.csv
 cache.csv
 tlb.csv
 ```
+
+Columns of the timing files (`rax.csv`, `cold.csv`; `ios.csv` adds `nonnormal`):
+
+```text
+matrix,category,reordering,threads,gflops,time_ms,rep,pos[,nonnormal]
+```
+
+`time_ms` is the median of `N_RUNS` (100) timed calls, written with six
+decimals. `rep` is the repetition and `pos` the position in the shuffled order.
+`reorder_times.csv` has `order_s` (computing the permutation) and `apply_s`
+(`permute_csr`); the break-even analyses use their sum. `ios_scan.csv` records,
+for each matrix, whether any of the 100 IOs iterations produced subnormal,
+infinite or NaN values (the timed runs see exactly these values).
+
+If a CSV already exists with a different header (for example results from the
+version without repetitions), the benchmark stops instead of mixing schemas.
+Move old results away first, e.g. `mv results results_thesis`.
 
 These files are generated data and are ignored by git.
 
@@ -294,21 +348,45 @@ The default plot pipeline is curated for the thesis narrative. Histogram-style
 outputs are limited to speedup and structural compression distributions under
 `figures/distributions/`.
 
+`make plot` takes the median over repetitions before plotting.
+
+Numbers and figures for the paper:
+
+```bash
+make paper                                   # = python3 -m scripts.paper_analysis
+python3 -m scripts.paper_analysis --dedupe   # count identical-pattern pairs once
+```
+
+This writes `figures/paper/paper_numbers.txt` (every number with a key and its
+raw value), `figures/paper/paper_numbers.tex` (use `\input{paper_numbers.tex}`
+and `\pn{x86.t4.rcm.win}` in LaTeX), per-matrix tables, and the portability and
+break-even figures. The candidate set for "best ordering" includes `none`.
+
 Increase logging verbosity with:
 
 ```bash
 LOG_LEVEL=DEBUG python3 -m scripts.analysis
 ```
 
-## 7. Clean
-
-Remove binaries and result CSVs:
+## 7. Tests
 
 ```bash
-make clean
+make all && make run-tests
 ```
 
-This does not remove downloaded matrices or generated figures.
+The tests include failure controls: malformed Matrix Market files, invalid
+permutations, a corrupted reordered matrix, structurally unsymmetric or
+duplicate-entry patterns, values that overflow or pass through the subnormal
+range in IOs, and an old-schema CSV must all be rejected. A symmetric file is
+compared entry by entry (position and value) with the full matrix it encodes,
+and with the same matrix stored in general format.
+
+## 8. Clean
+
+```bash
+make clean           # binaries only
+make clean-results   # deletes result CSVs, asks for confirmation
+```
 
 ## Documentation
 

@@ -9,28 +9,15 @@
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        printf("Usage: %s <file.mtx>\n", argv[0]);
+        printf("Usage: %s <category/file.mtx>\n", argv[0]);
         return EXIT_FAILURE;
     }
+    struct MatrixSet* set = prepare_matrices(argv[1], 1);
 
-    struct CSRMatrix*   csr  = read_matrix(argv[1]);
-    struct Path*        path = split_path(argv[1]);
-    struct Permutations* perm = compute_permutations(csr, path->file, 1);
-    
-    struct CSRMatrix* csr_rcm   = permute_csr(csr, perm->rcm_perm);
-    struct CSRMatrix* csr_amd   = permute_csr(csr, perm->amd_perm);
-    struct CSRMatrix* csr_nd    = permute_csr(csr, perm->nd_perm);
-    struct CSRMatrix* csr_gp    = permute_csr(csr, perm->gp_perm);
-
-    assert_permutation_correct(csr, csr_rcm, perm->rcm_perm, "RCM");
-    assert_permutation_correct(csr, csr_amd, perm->amd_perm, "AMD");
-    assert_permutation_correct(csr, csr_nd,  perm->nd_perm, "ND");
-    assert_permutation_correct(csr, csr_gp,  perm->gp_perm, "GP");
-    fprintf(stdout, "%s\n", "All tests passed!");
-
-    run_all_benchmarks(csr, csr_rcm, csr_amd, csr_nd, csr_gp, path);
-    compute_matrix_metrics(csr, csr_rcm, csr_amd, csr_nd, csr_gp, path);
-    cleanup(csr, csr_rcm, csr_amd, csr_nd, csr_gp, perm, path);
+    run_all_benchmarks(set);
+    ios_numeric_scan(set);
+    compute_matrix_metrics(set);
+    free_matrix_set(set);
 
     return EXIT_SUCCESS;
 }

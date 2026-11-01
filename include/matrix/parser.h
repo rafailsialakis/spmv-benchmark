@@ -35,27 +35,30 @@
 #include   <stdio.h>
 #include   <stdlib.h>
 #include   <string.h>
+#include   <strings.h>
 #include   "matrix/coo.h"
 
 #ifndef    PARSER_H   
 #define    PARSER_H
-#define    IS_REAL(t)      (strcmp((t)->field,    "real")      == 0)
-#define    IS_INTEGER(t)   (strcmp((t)->field,    "integer")   == 0)
-#define    IS_SYMMETRIC(t) (strcmp((t)->symmetry, "symmetric") == 0)
-#define    IS_GENERAL(t)   (strcmp((t)->symmetry, "general")   == 0)
+// Matrix Market keywords are case-insensitive.
+#define    IS_REAL(t)      (strcasecmp((t)->field,    "real")      == 0)
+#define    IS_INTEGER(t)   (strcasecmp((t)->field,    "integer")   == 0)
+#define    IS_SYMMETRIC(t) (strcasecmp((t)->symmetry, "symmetric") == 0)
+#define    IS_GENERAL(t)   (strcasecmp((t)->symmetry, "general")   == 0)
+#define    MTX_NAME_LEN    128
 
 /*
 * Represents the header information of a SuiteSparse .mtx file.
 *
 * Fields:
-*     name (char[16]): Optional name of the matrix (can store short titles or IDs).
+*     name (char[MTX_NAME_LEN]): Optional "% name:" line, e.g. "Botonakis/thermomech_TC".
 *     object (char[16]): Type of object in the file (usually "matrix").
 *     format (char[16]): Storage format (e.g., "coordinate" or "array").
 *     field (char[16]): Type of data in the matrix (e.g., "real", "integer", "complex").
 *     symmetry (char[16]): Symmetry property of the matrix ("general", "symmetric", etc.).
 */
 struct MtxType{
-    char   name[16];
+    char   name[MTX_NAME_LEN];
     char   object[16];
     char   format[16];
     char   field[16];

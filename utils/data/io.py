@@ -33,6 +33,45 @@ def read_csv(path: Path, label: str):
     return None
 
 
+def aggregate_repetitions(df):
+    """Collapse repeated measurements to one row per (matrix, method, threads).
+
+    New benchmark CSVs carry ``rep`` and ``pos`` columns (one row per
+    repetition). Every plot works on the median time over repetitions; GFLOP/s
+    is recomputed from that median so the two columns stay consistent.
+    Legacy CSVs without ``rep`` are returned unchanged.
+    """
+    if df is None or "rep" not in df.columns:
+        return df
+    keys = ["matrix", "category", "reordering", "threads"]
+    work = df.copy()
+    work["flop"] = work["gflops"] * work["time_ms"]          # = 2*nnz*1e-6, constant per matrix
+    agg = work.groupby(keys, as_index=False).agg(time_ms=("time_ms", "median"),
+                                                  flop=("flop", "median"),
+                                                  n_reps=("rep", "nunique"))
+    agg["gflops"] = agg["flop"] / agg["time_ms"]
+    return agg.drop(columns="flop")
+
+
+def normalize_reorder_times(df):
+    """Return reorder times with ``order_s``, ``apply_s`` and ``time_s`` columns.
+
+    ``time_s`` is the total preprocessing cost (compute + apply), which is what
+    the break-even plots divide by. Legacy files only have ``time_s`` (compute
+    only); for them ``apply_s`` is set to 0 and a warning is logged.
+    """
+    if df is None:
+        return None
+    df = df.copy()
+    if "order_s" not in df.columns:
+        logging.warning("reorder_times.csv has no order_s/apply_s columns (legacy run): "
+                        "break-even uses permutation compute time only")
+        df["order_s"] = df["time_s"]
+        df["apply_s"] = 0.0
+    df["time_s"] = df["order_s"] + df["apply_s"]
+    return df
+
+
 def read_files() -> tuple:
     """Load the expected x86 and ARM benchmark result CSV files."""
     x86_dir = RESULTS_DIR / "x86_results"
@@ -42,17 +81,17 @@ def read_files() -> tuple:
 
     df_metrics     = read_csv(x86_dir / "metrics.csv", "x86 metrics")
     
-    df_cold_x86    = read_csv(x86_dir / "cold.csv", "x86 cold timings")
-    df_ios_x86     = read_csv(x86_dir / "ios.csv", "x86 IO-swap timings")
-    df_rax_x86     = read_csv(x86_dir / "rax.csv", "x86 repeated-Ax timings")
-    df_reorder_x86 = read_csv(x86_dir / "reorder_times.csv", "x86 reorder timings")
+    df_cold_x86    = aggregate_repetitions(read_csv(x86_dir / "cold.csv", "x86 cold timings"))
+    df_ios_x86     = aggregate_repetitions(read_csv(x86_dir / "ios.csv", "x86 IO-swap timings"))
+    df_rax_x86     = aggregate_repetitions(read_csv(x86_dir / "rax.csv", "x86 repeated-Ax timings"))
+    df_reorder_x86 = normalize_reorder_times(read_csv(x86_dir / "reorder_times.csv", "x86 reorder timings"))
     df_cache_x86   = read_csv(x86_dir / "cache.csv", "x86 cache counters")
     df_tlb_x86     = read_csv(x86_dir / "tlb.csv", "x86 TLB counters")
     
-    df_cold_arm    = read_csv(arm_dir / "cold.csv", "ARM cold timings")
-    df_ios_arm     = read_csv(arm_dir / "ios.csv", "ARM IO-swap timings")
-    df_rax_arm     = read_csv(arm_dir / "rax.csv", "ARM repeated-Ax timings")
-    df_reorder_arm = read_csv(arm_dir / "reorder_times.csv", "ARM reorder timings")
+    df_cold_arm    = aggregate_repetitions(read_csv(arm_dir / "cold.csv", "ARM cold timings"))
+    df_ios_arm     = aggregate_repetitions(read_csv(arm_dir / "ios.csv", "ARM IO-swap timings"))
+    df_rax_arm     = aggregate_repetitions(read_csv(arm_dir / "rax.csv", "ARM repeated-Ax timings"))
+    df_reorder_arm = normalize_reorder_times(read_csv(arm_dir / "reorder_times.csv", "ARM reorder timings"))
     df_cache_arm   = read_csv(arm_dir / "cache.csv", "ARM cache counters")
     df_tlb_arm     = read_csv(arm_dir / "tlb.csv", "ARM TLB counters")
 

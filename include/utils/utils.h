@@ -16,6 +16,10 @@
 
 #define MAX_NUM_THREADS 4
 #define N_REORDERINGS   5   // none, rcm, amd, nd, gp
+#define N_METHODS       4   // rcm, amd, nd, gp (the reorderings, without the baseline)
+
+// Labels in the order of struct MatrixSet.m: {"none", "rcm", "amd", "nd", "gp"}
+extern const char* const REORDERING_NAMES[N_REORDERINGS];
 
 /*
  * Specifies the path of the *.mtx file. The path is: matrices/<field>/<matrix_file>
@@ -34,17 +38,60 @@ struct Path {
  * Defines the permutation vectors for each reordering method.
  *
  * Fields:
- *     rcm_perm (int*): Permutation vector for RCM
- *     amd_perm (int*): Permutation vector for AMD
- *     nd_perm  (int*): Permutation vector for METIS (ND)
- *     gp_perm  (int*): Permutation vector for METIS k-way partitioning (GP)
+ *     rcm_perm (int*): Permutation vector for RCM (genrcm)
+ *     amd_perm (int*): Permutation vector for AMD (CXSparse cs_amd)
+ *     nd_perm  (int*): Permutation vector for Scotch nested dissection (ND)
+ *     gp_perm  (int*): Permutation vector for Scotch k-way partitioning (GP)
+ *     order_s  (double[N_METHODS]): Wall time (s) to compute each permutation,
+ *                                   in the order rcm, amd, nd, gp
+ *
+ * All vectors use the convention p[new] = old.
  */
 struct Permutations {
     int* rcm_perm;
     int* amd_perm;
     int* nd_perm;
     int* gp_perm;
+    double order_s[N_METHODS];
 };
+
+/*
+ * The five matrices that every benchmark mode compares.
+ *
+ * Fields:
+ *     m       (struct CSRMatrix*[N_REORDERINGS]): none, rcm, amd, nd, gp.
+ *             m[0] ("none") is the original ordering rebuilt with the identity
+ *             permutation through permute_csr, so all five matrices are built by
+ *             the same code (fresh allocation, sorted column indices).
+ *     perm    (struct Permutations*): Permutation vectors and their compute times
+ *     apply_s (double[N_METHODS]): Wall time (s) of permute_csr for each method
+ *     path    (struct Path*): Matrix category and name
+ */
+struct MatrixSet {
+    struct CSRMatrix*    m[N_REORDERINGS];
+    struct Permutations* perm;
+    double               apply_s[N_METHODS];
+    struct Path*         path;
+};
+
+/*
+ * Checks that the matrix (sorted columns) has no duplicate entries and a
+ * structurally symmetric pattern. RCM, AMD and Scotch all treat the pattern
+ * as an undirected graph; Scotch nested dissection does not terminate on an
+ * unsymmetric one. Exits with an explanation if a check fails.
+ */
+void require_symmetric_pattern(const struct CSRMatrix* sorted, const char* name);
+
+/*
+ * Reads matrices/<arg>, checks the pattern (require_symmetric_pattern) before
+ * any ordering runs, computes and validates all permutations, builds the five
+ * matrices of a MatrixSet and frees the parsed original.
+ * If save_times is 1, appends compute and apply times to RESULTS_DIR/reorder_times.csv.
+ */
+struct MatrixSet* prepare_matrices(char* arg, int save_times);
+
+/* Frees everything owned by a MatrixSet. */
+void free_matrix_set(struct MatrixSet* set);
 
 /*
  * Used in order to ensure that the reordering in SpMxV produces the same
@@ -66,18 +113,19 @@ void assert_permutation_correct(struct CSRMatrix* original,
  * Exports permutation vectors to .txt files for sparsity pattern plotting.
  *
  * Args:
- *     csr  (struct CSRMatrix*):    Pointer to the parsed CSR matrix
- *     perm (struct Permutations*): Pointer to the permutation vectors struct
+ *     set (struct MatrixSet*): Matrices and permutation vectors
  *
  * Note:
  *     NOT used in normal execution — only for generating sparsity patterns.
  *     Exits the program with status code 1.
  */
-void export_permutations(struct CSRMatrix* csr, struct Permutations* perm);
+void export_permutations(struct MatrixSet* set);
 
 /*
  * Opens (or creates) a CSV file at the given path with the specified header.
- * Appends if file exists, writes header if newly created.
+ * Appends if file exists, writes header if newly created. Exits with an error
+ * if an existing file has a different header (e.g. results from an older
+ * version of the benchmark), so rows with different columns are never mixed.
  *
  * Args:
  *     path   (const char*): Path where the file will be opened/created
@@ -115,18 +163,17 @@ struct Path* split_path(char* arg);
 struct CSRMatrix* read_matrix(char* path);
 
 /*
- * Computes permutation vectors for RCM, AMD, METIS (ND) and METIS k-way (GP).
- * Also records reordering times in RESULTS_DIR/reorder_times.csv.
+ * Computes permutation vectors for RCM, AMD, Scotch ND and Scotch k-way (GP),
+ * checks that each is a valid permutation and records the compute times
+ * in perm->order_s.
  *
  * Args:
- *     csr  (struct CSRMatrix*): Pointer to the CSR matrix to reorder
- *     name (const char*):       Matrix name (used for CSV logging)
- *     save (int):               Save mode (1:yes / 0:no)
- * 
+ *     csr (struct CSRMatrix*): Pointer to the CSR matrix to reorder
+ *
  * Returns:
  *     struct Permutations*: Pointer to the computed permutation vectors
  */
-struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* name, int save);
+struct Permutations* compute_permutations(struct CSRMatrix* csr);
 
 /*
  * Computes structural metrics for the original and reordered matrices
@@ -134,53 +181,47 @@ struct Permutations* compute_permutations(struct CSRMatrix* csr, const char* nam
  * and writes them to RESULTS_DIR/metrics.csv.
  *
  * Args:
- *     csr     (struct CSRMatrix*): Pointer to the original CSR matrix
- *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
- *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
- *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
- *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
- *     path    (struct Path*):      Pointer to the path struct
+ *     set (struct MatrixSet*): The five matrices and the matrix path
  */
-void compute_matrix_metrics(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
-                             struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                             struct CSRMatrix* csr_gp, struct Path* path);
+void compute_matrix_metrics(struct MatrixSet* set);
 
 /*
- * Runs RAx, IOs and Cold Cache benchmarks for all reorderings,
- * at 1, 2 and 4 threads. Results saved to RESULTS_DIR/{rax,ios,cold}.csv.
+ * Runs RAx, IOs and Cold Cache benchmarks for all reorderings at 1, 2 and 4
+ * threads, repeated SPMV_REPS times (default N_REPS). In every repetition and
+ * thread count the order of the five matrices is shuffled (seeded by SPMV_SEED
+ * and the matrix name, so a run is reproducible). Each CSV row records the
+ * repetition (rep) and the position in the shuffled order (pos).
+ * Results saved to RESULTS_DIR/{rax,ios,cold}.csv.
  *
  * Args:
- *     csr     (struct CSRMatrix*): Pointer to the original CSR matrix
- *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
- *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
- *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
- *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
- *     path    (struct Path*):      Pointer to the path struct
+ *     set (struct MatrixSet*): The five matrices and the matrix path
  */
-void run_all_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
-                        struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                        struct CSRMatrix* csr_gp, struct Path* path);
+void run_all_benchmarks(struct MatrixSet* set);
+
+/*
+ * Replays the IOs iteration sequence (x = 1, N_RUNS swaps) untimed and
+ * serially on the baseline matrix and checks the output vector after every
+ * iteration for subnormal, infinite or NaN entries. The parallel kernel computes
+ * every row in the same order, so the timed runs see exactly these values.
+ * A check of only the final vector would miss values that pass through the
+ * subnormal range and then underflow to zero.
+ * Results appended to RESULTS_DIR/ios_scan.csv; a warning is printed if any
+ * iteration produced non-normal values.
+ */
+void ios_numeric_scan(struct MatrixSet* set);
 
 /*
  * Runs cache miss benchmarks (L1, L2, and L3 on x86 only) sequentially
  * using the RAx methodology. Results saved to RESULTS_DIR/cache.csv.
  *
  * Args:
- *     csr     (struct CSRMatrix*): Pointer to the original CSR matrix
- *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
- *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
- *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
- *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
- *     path    (struct Path*):      Pointer to the path struct
+ *     set (struct MatrixSet*): The five matrices and the matrix path
  */
-void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
-                          struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                          struct CSRMatrix* csr_gp, struct Path* path);
+void run_cache_benchmarks(struct MatrixSet* set);
 
 /*
- * Runs TLB benchmarks (DTLB loads, DTLB load misses, ITLB load misses)
- * sequentially using the RAx methodology. Also computes the DTLB miss rate
- * as misses/loads. Results saved to RESULTS_DIR/tlb.csv.
+ * Runs TLB benchmarks (DTLB load misses, ITLB load misses) sequentially
+ * using the RAx methodology. Results saved to RESULTS_DIR/tlb.csv.
  *
  * Note:
  *     Events are resolved at runtime via PAPI_event_name_to_code.
@@ -188,31 +229,8 @@ void run_cache_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
  *     is skipped gracefully.
  *
  * Args:
- *     csr     (struct CSRMatrix*): Pointer to the original CSR matrix
- *     csr_rcm (struct CSRMatrix*): Pointer to the RCM-reordered matrix
- *     csr_amd (struct CSRMatrix*): Pointer to the AMD-reordered matrix
- *     csr_nd  (struct CSRMatrix*): Pointer to the ND-reordered matrix
- *     csr_gp  (struct CSRMatrix*): Pointer to the GP-reordered matrix
- *     path    (struct Path*):      Pointer to the path struct
+ *     set (struct MatrixSet*): The five matrices and the matrix path
  */
-void run_tlb_benchmarks(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
-                         struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-                         struct CSRMatrix* csr_gp, struct Path* path);
-
-/*
- * Frees all dynamically allocated memory (matrices, permutations, path).
- *
- * Args:
- *     csr     (struct CSRMatrix*):  Pointer to the original CSR matrix
- *     csr_rcm (struct CSRMatrix*):  Pointer to the RCM-reordered matrix
- *     csr_amd (struct CSRMatrix*):  Pointer to the AMD-reordered matrix
- *     csr_nd  (struct CSRMatrix*):  Pointer to the ND-reordered matrix
- *     csr_gp  (struct CSRMatrix*):  Pointer to the GP-reordered matrix
- *     perm    (struct Permutations*): Pointer to the permutation vectors
- *     path    (struct Path*):        Pointer to the path struct
- */
-void cleanup(struct CSRMatrix* csr, struct CSRMatrix* csr_rcm,
-             struct CSRMatrix* csr_amd, struct CSRMatrix* csr_nd,
-             struct CSRMatrix* csr_gp, struct Permutations* perm, struct Path* path);
+void run_tlb_benchmarks(struct MatrixSet* set);
 
 #endif
