@@ -46,7 +46,6 @@ CFD	venkat25.mtx	https://sparse.tamu.edu/MM/Simon/venkat25.tar.gz
 
 # Optimization / KKT systems
 Optimization	kkt_power.mtx	https://sparse.tamu.edu/MM/Zaoui/kkt_power.tar.gz
-Optimization	mip1.mtx	https://sparse.tamu.edu/MM/Andrianov/mip1.tar.gz
 Optimization	largebasis.mtx	https://sparse.tamu.edu/MM/QLi/largebasis.tar.gz
 Optimization	aug3d.mtx	https://sparse.tamu.edu/MM/GHS_indef/aug3d.tar.gz
 
