@@ -53,4 +53,13 @@ struct CSRMatrix* csr_from_coo(struct COOMatrix* coo_mtx);
  */
 void csr_free(struct CSRMatrix* csr);
 
+/* Both checks require column indices sorted within each row (permute_csr output). */
+
+/* Number of repeated (row, col) entries. */
+long long csr_duplicate_entries(const struct CSRMatrix* csr);
+
+/* Number of off-diagonal entries (i, j) whose transpose entry (j, i) is missing.
+ * 0 means the sparsity pattern is structurally symmetric. */
+long long csr_pattern_asymmetry(const struct CSRMatrix* csr);
+
 #endif

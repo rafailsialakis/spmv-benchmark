@@ -40,6 +40,7 @@ MAIN_SRC     = $(SRC_DIR)/main/main.c
 CACHE_SRC    = $(SRC_DIR)/main/cache_main.c
 PERM_SRC     = $(SRC_DIR)/main/perm_main.c
 TLB_SRC      = $(SRC_DIR)/main/tlb_main.c
+CHECK_SRC    = $(SRC_DIR)/main/check_main.c
 
 COMMON_SRC = $(MATRIX_SRC) $(SPMV_SRC) $(REORDER_SRC) $(UTILS_SRC) $(BENCH_SRC)
 
@@ -51,10 +52,11 @@ BIN1 = $(BIN_DIR)/spmv-benchmark
 BIN2 = $(BIN_DIR)/spmv-benchmark-perm
 BIN3 = $(BIN_DIR)/spmv-benchmark-cache
 BIN4 = $(BIN_DIR)/spmv-benchmark-tlb
+BIN5 = $(BIN_DIR)/spmv-check
 
-.PHONY: all clean run run-perm run-cache run-tlb run-all run-all-cache run-all-tlb plot docs docs-serve run-tests
+.PHONY: all check-matrices clean clean-results platform-info paper run run-perm run-cache run-tlb run-all run-all-cache run-all-tlb plot docs docs-serve run-tests
 
-all: $(BIN1) $(BIN2) $(BIN3) $(BIN4)
+all: $(BIN1) $(BIN2) $(BIN3) $(BIN4) $(BIN5)
 
 $(BIN1): $(COMMON_SRC) $(MAIN_SRC)
 	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
@@ -71,6 +73,19 @@ $(BIN3): $(COMMON_SRC) $(CACHE_SRC)
 $(BIN4): $(COMMON_SRC) $(TLB_SRC)
 	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(BIN5): $(COMMON_SRC) $(CHECK_SRC)
+	mkdir -p $(BIN_DIR) $(RESULT_DIRS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# Pre-flight: every matrix must have a structurally symmetric pattern
+check-matrices: $(BIN5)
+	@fail=0; count=0; for mtx in $$(find -L matrices -name "*.mtx" | sed 's|matrices/||' | sort); do \
+		count=$$((count + 1)); \
+		./$(BIN5) $$mtx > /dev/null || { echo "FAIL $$mtx"; fail=1; }; \
+	done; \
+	if [ $$count -eq 0 ]; then echo "No .mtx files found under matrices/"; exit 1; fi; \
+	[ $$fail -eq 0 ] && echo "All $$count matrices passed the pattern check." || exit 1
 
 run: $(BIN1)
 	./$(BIN1) $(MTX)
@@ -123,6 +138,14 @@ download-matrices:
 plot:
 	python3 -m scripts.analysis
 
+# Numbers and figures for the conference paper (repetition-aware analysis)
+paper:
+	python3 -m scripts.paper_analysis
+
+# Records CPU, kernel, compiler, THP, page size and frequency settings
+platform-info:
+	scripts/platform_info.sh
+
 docs:
 	cd docs && zensical build
 
@@ -132,6 +155,10 @@ docs-serve:
 run-tests:
 	pytest -v -ra
 
+# Removes binaries only. Benchmark results are deleted only by clean-results.
 clean:
-	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4)
-	rm -f results/x86_results/*.csv results/arm_results/*.csv
+	rm -f $(BIN1) $(BIN2) $(BIN3) $(BIN4) $(BIN5)
+
+clean-results:
+	@printf 'This deletes every CSV in results/x86_results and results/arm_results. Type yes: '; \
+	read ans; [ "$$ans" = yes ] && rm -f results/x86_results/*.csv results/arm_results/*.csv || echo 'Aborted.'

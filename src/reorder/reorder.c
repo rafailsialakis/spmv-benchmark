@@ -64,8 +64,8 @@ int* compute_permutation_rcm(struct CSRMatrix* csr) {
 }
 
 int* compute_permutation_gp(struct CSRMatrix* csr) {
-    // Scotch k-way partitioning (the same call METIS_PartGraphKway wraps), run
-    // in a deterministic context
+    // Scotch k-way graph partitioning (native Scotch API, not METIS), run in a
+    // deterministic context
     SCOTCH_Context context;
     SCOTCH_Graph   graph, ctx_graph;
     SCOTCH_Strat   strat;
@@ -105,27 +105,31 @@ int* compute_permutation_gp(struct CSRMatrix* csr) {
 }
 
 int* compute_permutation_amd(struct CSRMatrix* csr) {
-    cs* A  = cs_spalloc(csr->n, csr->n, csr->nnz, 1, 0);
-    // For symmetric matrices CSC == CSR
-    A->p  = csr->row_ptr;   
-    A->i  = csr->col_idx;   
-    A->x  = csr->values;
-    A->nz = -1;
+    // Wrap the CSR arrays in a CSparse header without allocating (cs_spalloc
+    // would allocate p/i/x that are then overwritten and leaked: one extra copy
+    // of the matrix held for the whole run). The pattern is structurally
+    // symmetric, so the CSR arrays are also a valid CSC of A (order 1 uses A+A').
+    cs A;
+    A.nzmax = csr->nnz;
+    A.m     = csr->n;
+    A.n     = csr->n;
+    A.p     = csr->row_ptr;
+    A.i     = csr->col_idx;
+    A.x     = NULL;          // cs_amd only needs the pattern
+    A.nz    = -1;            // compressed-column form
 
-    int* p = cs_amd(1,A);
-    // In order to avoid corrupting memory
-    A->p = NULL;
-    A->i = NULL;
-    A->x = NULL;
-
-    cs_spfree(A);
-    
+    int* p = cs_amd(1, &A);
+    if (!p) {
+        fprintf(stderr, "cs_amd failed\n");
+        exit(EXIT_FAILURE);
+    }
     return p;
 }
 
 int* compute_permutation_nd(struct CSRMatrix* csr) {
-    // Scotch nested dissection (the same call METIS_NodeND wraps), run in a
-    // deterministic context so the ordering is identical on every run
+    // Scotch nested dissection (native Scotch API with the default ordering
+    // strategy, not METIS), run in a deterministic context so the ordering is
+    // identical on every run
     SCOTCH_Context context;
     SCOTCH_Graph   graph, ctx_graph;
     SCOTCH_Strat   strat;
@@ -155,8 +159,31 @@ int* compute_permutation_nd(struct CSRMatrix* csr) {
     SCOTCH_contextExit(&context);
 
     free(ip); free(xadj); free(adjncy);
-    // p[new] = old (Scotch peritab, METIS perm)
-    return (int*) p;
+    // p[new] = old (Scotch peritab). Copy element-wise instead of casting the
+    // array, so the code stays correct if Scotch is built with 64-bit SCOTCH_Num.
+    int* perm = malloc((size_t)n * sizeof(int));
+    for (SCOTCH_Num i = 0; i < n; i++) perm[i] = (int)p[i];
+    free(p);
+    return perm;
+}
+
+int* identity_permutation(int n) {
+    int* p = malloc((size_t)n * sizeof(int));
+    for (int i = 0; i < n; i++) p[i] = i;
+    return p;
+}
+
+void validate_permutation(const int* p, int n, const char* label) {
+    unsigned char* seen = calloc((size_t)n, 1);
+    for (int i = 0; i < n; i++) {
+        if (p[i] < 0 || p[i] >= n || seen[p[i]]) {
+            fprintf(stderr, "INVALID PERMUTATION [%s]: entry %d = %d is %s\n", label, i, p[i],
+                    (p[i] < 0 || p[i] >= n) ? "out of range" : "a duplicate");
+            exit(EXIT_FAILURE);
+        }
+        seen[p[i]] = 1;
+    }
+    free(seen);
 }
 
 struct CSRMatrix* permute_csr(struct CSRMatrix* csr, int* p) {

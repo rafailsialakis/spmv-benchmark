@@ -7,6 +7,14 @@
 #define    N_RUNS 100
 #define    WARMUP_RUNS 5
 
+// Independent repetitions of the whole (thread count x reordering) sweep per
+// matrix, each with a freshly shuffled reordering order. Override at run time
+// with the SPMV_REPS environment variable (SPMV_SEED sets the shuffle seed).
+#ifndef    N_REPS
+#define    N_REPS 5
+#endif
+#define    DEFAULT_SHUFFLE_SEED 20261029u
+
 #if defined(__aarch64__)
     #define FLUSH_BYTES (64UL * 1024 * 1024)
 #elif defined(__x86_64__)
@@ -22,12 +30,18 @@
 typedef struct {
     double     gflops;
     double     time_ms;
+    int        nonnormal;   // IOs only: subnormal/inf/NaN entries in the final vector (-1 = not checked)
 } BenchResult;
 
-/* Allocates 64MB of heap space, iterates them and frees the memory used.
- * 64MB > L1 (128KB) + L2 (2MB) + L3 (6MB) size 
+/* Writes FLUSH_BYTES of a fresh buffer from all threads of the current team
+ * (64 MiB on ARM > 32 MiB L3, 16 MiB on x86 > 6 MiB L3). Each thread touches its
+ * own contiguous chunk, so the private L1/L2 of every core used by the kernel
+ * are evicted as well, not only those of the calling core.
  */
 void flush_cache();
+
+/* Counts entries of v that are subnormal, infinite or NaN. */
+int count_nonnormal(const double* v, int n);
 
 /* Used to calculate GFLOP/s
  * 

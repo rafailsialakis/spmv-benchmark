@@ -65,6 +65,20 @@ int* compute_permutation_nd(struct CSRMatrix* csr);
 int* compute_permutation_gp(struct CSRMatrix* csr);
 
 /*
+ * Returns the identity permutation p[i] = i (size n). Used to build the
+ * "none" baseline through permute_csr, so that the original ordering goes
+ * through exactly the same code path (fresh allocation, sorted columns) as
+ * the reordered matrices.
+ */
+int* identity_permutation(int n);
+
+/*
+ * Checks that p is a bijection of {0,...,n-1} (every index exactly once).
+ * Exits with an error message naming label otherwise.
+ */
+void validate_permutation(const int* p, int n, const char* label);
+
+/*
  * Applies a permutation vector to a CSR matrix (A' = P·A·Pᵀ).
  *
  * Args:
