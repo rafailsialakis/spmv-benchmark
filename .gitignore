@@ -4,6 +4,7 @@
 .codex
 .vscode
 
+log/
 bin/
 matrices/
 figures/

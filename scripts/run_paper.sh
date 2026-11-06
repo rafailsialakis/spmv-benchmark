@@ -18,4 +18,4 @@ fi
 
 export SPMV_REPS="${SPMV_REPS:-5}"
 echo "Running with SPMV_REPS=$SPMV_REPS"
-make run-all 2>&1 | tee -a "results/run_$(uname -m)_$(date +%Y%m%d_%H%M%S).log"
+mkdir -p log && make run-all 2>&1 | tee -a "log/run_$(uname -m)_$(date +%Y%m%d_%H%M%S).log"
